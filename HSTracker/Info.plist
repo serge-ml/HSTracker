@@ -28,7 +28,17 @@
 			<key>CFBundleTypeRole</key>
 			<string>Editor</string>
 			<key>CFBundleURLName</key>
-			<string></string>
+			<string>io.github.serge-ml.hstrackerarena</string>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>hstracker-arena</string>
+			</array>
+		</dict>
+		<dict>
+			<key>CFBundleTypeRole</key>
+			<string>Editor</string>
+			<key>CFBundleURLName</key>
+			<string>io.github.serge-ml.hstrackerarena.hsreplay</string>
 			<key>CFBundleURLSchemes</key>
 			<array>
 				<string>hstracker</string>
@@ -37,6 +47,8 @@
 	</array>
 	<key>CFBundleVersion</key>
 	<string>DEV</string>
+	<key>HearthArenaForkRevision</key>
+	<string>ha.1</string>
 	<key>LSApplicationCategoryType</key>
 	<string>public.app-category.entertainment</string>
 	<key>LSMinimumSystemVersion</key>
@@ -56,18 +68,6 @@
 	</array>
 	<key>NSPrincipalClass</key>
 	<string>SentryCrashExceptionApplication</string>
-	<key>SUAutomaticallyUpdate</key>
-	<false/>
-	<key>SUEnableAutomaticChecks</key>
-	<true/>
-	<key>SUEnableSystemProfiling</key>
-	<false/>
-	<key>SUFeedURL</key>
-	<string>https://hsdecktracker.net/hstracker/appcast2.xml</string>
-	<key>SUPublicDSAKeyFile</key>
-	<string>dsa_pub.pem</string>
-	<key>SUPublicEDKey</key>
-	<string>FAEVNwLFlLldmu1C6aA0h041sJAP1sWrTjQhE9iw7BE=</string>
 	<key>SecTaskAccess</key>
 	<array>
 		<string>allowed</string>

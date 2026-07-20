@@ -7,7 +7,6 @@
 //
 
 import XCTest
-import Wrap
 
 @testable import HSTracker
 
@@ -21,7 +20,7 @@ class ReplayUploadTests: HSTrackerTests {
 		super.tearDown()
 	}
 	
-	func testMetadataWrap() {
+	func testMetadataEncoding() throws {
 		let player = UploadMetaData.Player()
 		
 //		player.rank = 1
@@ -30,17 +29,16 @@ class ReplayUploadTests: HSTrackerTests {
 		player.wins = 20
 		player.losses = 10
 		player.deck = ["one", "two"]
-		player.deckId = 12345
-		player.cardBack = 3
+		player.deck_id = 12345
+		player.cardback = 3
 		
-		guard let wrappedPlayer: [String : Any] = try? wrap(player) else {
-			XCTFail()
-			return
-		}
+		let data = try JSONEncoder().encode(player)
+		let wrappedPlayer = try XCTUnwrap(
+			try JSONSerialization.jsonObject(with: data) as? [String: Any]
+		)
 		
 //		XCTAssert(wrappedPlayer["rank"] as! Int == player.rank!)
-		XCTAssert(wrappedPlayer["cardback"] as! Int == player.cardBack!)
-		XCTAssert(wrappedPlayer["deck"] as! [String] == player.deck!)
+		XCTAssertEqual(wrappedPlayer["cardback"] as? Int, player.cardback)
+		XCTAssertEqual(wrappedPlayer["deck"] as? [String], player.deck)
 	}
 }
-

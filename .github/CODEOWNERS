@@ -1,0 +1,7 @@
+# Delivery and identity boundaries require explicit owner review.
+/.github/CODEOWNERS @serge-ml
+/.github/workflows/ @serge-ml
+/HSTracker.xcodeproj/project.pbxproj @serge-ml
+/HSTracker/Info.plist @serge-ml
+/HSTracker/HSTracker.entitlements @serge-ml
+/scripts/ @serge-ml

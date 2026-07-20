@@ -13,8 +13,6 @@
 #import <HockeySDK/HockeySDK.h>
 #endif
 
-#import <Sparkle/Sparkle.h>
-
 #import "GlowFilter.h"
 
 #import <HearthMirror/HearthMirror.h>

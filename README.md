@@ -1,17 +1,28 @@
-# HSTracker
-[![Build Status](https://travis-ci.org/HearthSim/HSTracker.svg?branch=master)](https://travis-ci.org/HearthSim/HSTracker)
+# HSTracker Arena
 
-HSTracker is an automatic deck tracker and deck manager for Hearthstone on macOS.
+This personal fork of
+[HearthSim/HSTracker](https://github.com/HearthSim/HSTracker) adds public
+HearthArena base tier-list scores to ordinary Arena draft offers. It does not
+reproduce HearthArena's private dynamic synergy advice and is not affiliated
+with HearthArena, HearthSim, or Blizzard.
 
+See [HEARTHARENA.md](HEARTHARENA.md) for the architecture, build commands,
+backup procedure, tests, and manual Arena smoke-test matrix. Current
+requirement-by-requirement evidence and remaining gates are tracked in
+[HEARTHARENA-AUDIT.md](HEARTHARENA-AUDIT.md).
 
 ## Installation
 - Requirements:
-  - macOS 10.10 or higher
+  - macOS 10.14 or higher
+  - Full Xcode for local development builds
   - For Windows support please look at [**Hearthstone Deck Tracker**](https://github.com/HearthSim/Hearthstone-Deck-Tracker/)
-- Download the latest version [from here](https://hsdecktracker.net/hstracker/download/)
-- Extract the archive
-- Move `HSTracker.app` to your `Applications` directory
-- Launch HSTracker before Hearthstone
+- No HSTracker Arena binary release is published yet. Build this repository
+  with the commands in [HEARTHARENA.md](HEARTHARENA.md).
+- Do not use the official HSTracker download link when you expect the
+  HearthArena overlay; the official application does not contain this fork's
+  feature.
+- Move `HSTracker Arena.app` to your `Applications` directory.
+- Launch HSTracker Arena before Hearthstone.
 - Create a new deck from the Deck Manager or import it from a deckstring. HSTracker will also auto-detect the deck you play with.
 
 

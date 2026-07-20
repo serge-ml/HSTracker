@@ -19,6 +19,7 @@ struct ArenaHandler: LogEventParser {
 	}
 	
     func handle(logLine: LogLine) {
+        Watchers.arenaWatcher.observeArenaLog(logLine.line)
 
         if logLine.line.contains("IN_REWARDS") && coreManager.game.currentMode == .draft {
             _ = Watchers.arenaWatcher.update()

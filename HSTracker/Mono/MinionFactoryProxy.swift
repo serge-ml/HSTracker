@@ -11,12 +11,12 @@ import Foundation
 class MinionFactoryProxy: MonoHandle, MonoClassInitializer {
 
     internal static var _class: OpaquePointer?
-    private static var _classVT: OpaquePointer!
+    private static var _classVT: OpaquePointer?
     
     private static var _createFromCardid: OpaquePointer!
-    private static var _cardIdsWithoutPremiumImplementations: OpaquePointer!
-    private static var _cardIdsWithCleave: OpaquePointer!
-    private static var _cardIdsWithMegaWindfury: OpaquePointer!
+    private static var _cardIdsWithoutPremiumImplementations: OpaquePointer?
+    private static var _cardIdsWithCleave: OpaquePointer?
+    private static var _cardIdsWithMegaWindfury: OpaquePointer?
     private static var _tryGetPremiumIdFromNormal: OpaquePointer!
     
     static var _members = [String: OpaquePointer]()
@@ -28,13 +28,24 @@ class MinionFactoryProxy: MonoHandle, MonoClassInitializer {
         
         _createFromCardid = MonoHelper.getMethod(MinionFactoryProxy._class, "CreateFromCardId", 2)
         
-        _cardIdsWithoutPremiumImplementations = MonoHelper.getField(_class, "cardIdsWithoutPremiumImplementations")
+        // BobsBuddy 1.44.9 removed this compatibility set. An empty set has
+        // the same meaning once every supported minion has a premium
+        // implementation, and keeps newer managed assemblies launchable.
+        _cardIdsWithoutPremiumImplementations = mono_class_get_field_from_name(
+            _class,
+            "cardIdsWithoutPremiumImplementations"
+        )
+        if _cardIdsWithoutPremiumImplementations == nil {
+            logger.warning(
+                "BobsBuddy does not expose cardIdsWithoutPremiumImplementations; using an empty compatibility set"
+            )
+        }
         _cardIdsWithCleave = MonoHelper.getField(_class, "cardIDsWithCleave")
         _cardIdsWithMegaWindfury = MonoHelper.getField(_class, "cardIdsWithMegaWindfury")
         
         _tryGetPremiumIdFromNormal = MonoHelper.getMethod(MinionFactoryProxy._class, "TryGetPremiumIdFromNormal", 1)
 
-        _classVT = mono_class_vtable(MonoHelper._monoInstance, mono_field_get_parent(_cardIdsWithoutPremiumImplementations))
+        _classVT = mono_class_vtable(MonoHelper._monoInstance, _class)
     }
     
     required init(obj: UnsafeMutablePointer<MonoObject>?) {
@@ -60,10 +71,13 @@ class MinionFactoryProxy: MonoHandle, MonoClassInitializer {
         return res
     }
     
-    static func getStringArrayField(field: OpaquePointer!) -> [String] {
+    static func getStringArrayField(field: OpaquePointer?) -> [String] {
+        guard let field = field, let classVT = _classVT else {
+            return []
+        }
         let value = UnsafeMutablePointer<UnsafeMutablePointer<MonoObject>>.allocate(capacity: 1)
         
-        mono_field_static_get_value(MinionFactoryProxy._classVT, field, value)
+        mono_field_static_get_value(classVT, field, value)
         
         let obj = value.pointee
         

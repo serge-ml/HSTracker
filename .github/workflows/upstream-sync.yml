@@ -1,0 +1,265 @@
+name: HSTracker upstream sync
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "41 4 * * *"
+
+permissions:
+  contents: write
+  issues: write
+  pull-requests: write
+
+concurrency:
+  group: upstream-sync
+  cancel-in-progress: false
+
+jobs:
+  prepare-sync-pr:
+    runs-on: macos-15
+    env:
+      BASE_BRANCH: ${{ github.event.repository.default_branch }}
+      GH_TOKEN: ${{ secrets.UPSTREAM_SYNC_TOKEN }}
+    steps:
+      - name: Require the dedicated sync token
+        run: |
+          if [ -z "$GH_TOKEN" ]; then
+            echo "Configure the fine-grained UPSTREAM_SYNC_TOKEN secret."
+            exit 1
+          fi
+
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          ref: ${{ github.event.repository.default_branch }}
+          token: ${{ secrets.UPSTREAM_SYNC_TOKEN }}
+
+      - name: Fetch official HSTracker
+        run: |
+          git remote add upstream https://github.com/HearthSim/HSTracker.git
+          git fetch --prune upstream master
+
+      - name: Detect upstream changes
+        id: status
+        run: |
+          echo "base_sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
+          echo "upstream_sha=$(git rev-parse upstream/master)" >> "$GITHUB_OUTPUT"
+          if git merge-base --is-ancestor upstream/master HEAD; then
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Fast-forward the audit-only upstream branch
+        if: steps.status.outputs.changed == 'true'
+        run: |
+          git fetch origin upstream-sync:refs/remotes/origin/upstream-sync || true
+          if git show-ref --verify --quiet refs/remotes/origin/upstream-sync; then
+            git merge-base --is-ancestor origin/upstream-sync upstream/master
+          fi
+          git push origin upstream/master:refs/heads/upstream-sync
+
+      - name: Merge upstream into a unique review branch
+        if: steps.status.outputs.changed == 'true'
+        id: merge
+        run: |
+          short_sha="$(git rev-parse --short=10 upstream/master)"
+          base_sha="$(git rev-parse --short=8 HEAD)"
+          branch="sync/hstracker-$short_sha-$base_sha"
+          echo "branch=$branch" >> "$GITHUB_OUTPUT"
+
+          if git ls-remote --exit-code --heads origin "$branch"; then
+            git fetch origin "$branch:refs/remotes/origin/$branch"
+            git switch --detach "origin/$branch"
+            echo "conflict=false" >> "$GITHUB_OUTPUT"
+            echo "needs_push=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          git config user.name "hstracker-upstream-sync[bot]"
+          git config user.email \
+            "41898282+github-actions[bot]@users.noreply.github.com"
+          git switch -c "$branch"
+
+          set +e
+          git merge --no-edit upstream/master
+          merge_status=$?
+          set -e
+          if [ "$merge_status" -ne 0 ]; then
+            {
+              echo "conflict_files<<EOF"
+              git diff --name-only --diff-filter=U
+              echo "EOF"
+            } >> "$GITHUB_OUTPUT"
+            git merge --abort
+            echo "conflict=true" >> "$GITHUB_OUTPUT"
+            echo "needs_push=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          echo "conflict=false" >> "$GITHUB_OUTPUT"
+          echo "needs_push=true" >> "$GITHUB_OUTPUT"
+
+      - name: Open or update the conflict issue
+        if: steps.status.outputs.changed == 'true' && steps.merge.outputs.conflict == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          UPSTREAM_SHA: ${{ steps.status.outputs.upstream_sha }}
+          BASE_SHA: ${{ steps.status.outputs.base_sha }}
+          CONFLICT_FILES: ${{ steps.merge.outputs.conflict_files }}
+        run: |
+          short_sha="${UPSTREAM_SHA:0:10}"
+          title="[automation] Upstream sync conflict: $short_sha"
+          run_url="${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+          issue_number="$(
+            gh issue list \
+              --state open \
+              --search "$title in:title" \
+              --json number \
+              --jq '.[0].number // empty'
+          )"
+          body="$(
+            printf '%s\n\n%s\n%s\n%s\n\n%s\n%s\n' \
+              "The automated merge of official HSTracker requires manual resolution." \
+              "- Upstream: \`$UPSTREAM_SHA\`" \
+              "- Fork base: \`$BASE_SHA\`" \
+              "- Workflow run: $run_url" \
+              "Conflicting files:" \
+              "\`\`\`"$'\n'"$CONFLICT_FILES"$'\n'"\`\`\`"
+          )"
+          if [ -n "$issue_number" ]; then
+            gh issue edit "$issue_number" --body "$body"
+          else
+            gh issue create --title "$title" --body "$body"
+          fi
+
+      - name: Stop after a merge conflict
+        if: steps.status.outputs.changed == 'true' && steps.merge.outputs.conflict == 'true'
+        run: exit 1
+
+      - name: Push the review branch
+        if: steps.status.outputs.changed == 'true' && steps.merge.outputs.needs_push == 'true'
+        run: git push --set-upstream origin "${{ steps.merge.outputs.branch }}"
+
+      - name: Detect protected delivery changes
+        if: steps.status.outputs.changed == 'true' && steps.merge.outputs.conflict == 'false'
+        id: protected
+        env:
+          BASE_SHA: ${{ steps.status.outputs.base_sha }}
+        run: |
+          protected_files="$(
+            git diff --name-only "$BASE_SHA...HEAD" |
+              grep -E \
+                '^(\.github/workflows/|HSTracker\.xcodeproj/project\.pbxproj$|HSTracker/Info\.plist$|HSTracker/HSTracker\.entitlements$|scripts/)' \
+                || true
+          )"
+          if [ -n "$protected_files" ]; then
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+            {
+              echo "files<<EOF"
+              echo "$protected_files"
+              echo "EOF"
+            } >> "$GITHUB_OUTPUT"
+          else
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Ensure sync labels exist
+        if: steps.status.outputs.changed == 'true' && steps.merge.outputs.conflict == 'false'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh label create upstream-sync \
+            --color "1D76DB" \
+            --description "Automated merge from HearthSim/HSTracker" \
+            --force
+          gh label create automerge \
+            --color "0E8A16" \
+            --description "Eligible for merge after required checks" \
+            --force
+
+      - name: Open or locate the sync pull request
+        if: steps.status.outputs.changed == 'true' && steps.merge.outputs.conflict == 'false'
+        id: pull_request
+        env:
+          BRANCH: ${{ steps.merge.outputs.branch }}
+          UPSTREAM_SHA: ${{ steps.status.outputs.upstream_sha }}
+          BASE_SHA: ${{ steps.status.outputs.base_sha }}
+          PROTECTED: ${{ steps.protected.outputs.changed }}
+          PROTECTED_FILES: ${{ steps.protected.outputs.files }}
+        run: |
+          pr_number="$(
+            gh pr list \
+              --base "$BASE_BRANCH" \
+              --head "$BRANCH" \
+              --state open \
+              --json number \
+              --jq '.[0].number // empty'
+          )"
+          if [ -z "$pr_number" ]; then
+            body="$(
+              printf '%s\n\n%s\n%s\n%s\n\n%s\n' \
+                "Automated merge from the official HSTracker repository." \
+                "- Upstream: \`$UPSTREAM_SHA\`" \
+                "- Fork base: \`$BASE_SHA\`" \
+                "- Protected delivery files changed: \`$PROTECTED\`" \
+                "Merge only after required CI passes. Protected delivery changes require explicit owner review."
+            )"
+            gh pr create \
+              --base "$BASE_BRANCH" \
+              --head "$BRANCH" \
+              --title "chore: sync official HSTracker upstream" \
+              --body "$body"
+            pr_number="$(
+              gh pr view "$BRANCH" --json number --jq '.number'
+            )"
+          fi
+          echo "number=$pr_number" >> "$GITHUB_OUTPUT"
+          gh pr view "$pr_number" --json url --jq '"url=" + .url' \
+            >> "$GITHUB_OUTPUT"
+
+          if [ "$PROTECTED" = "true" ]; then
+            printf '%s\n%s\n%s\n' \
+              "Auto-merge is paused because protected delivery files changed:" \
+              "\`\`\`" \
+              "$PROTECTED_FILES" > "$RUNNER_TEMP/protected-comment.txt"
+            printf '%s\n' "\`\`\`" >> "$RUNNER_TEMP/protected-comment.txt"
+            gh pr comment "$pr_number" \
+              --body-file "$RUNNER_TEMP/protected-comment.txt"
+          fi
+
+      - name: Label the sync pull request
+        if: steps.status.outputs.changed == 'true' && steps.merge.outputs.conflict == 'false'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh pr edit \
+            "${{ steps.pull_request.outputs.number }}" \
+            --add-label upstream-sync \
+            --add-label automerge
+
+      - name: Enable auto-merge for safe sync changes
+        if: steps.status.outputs.changed == 'true' && steps.merge.outputs.conflict == 'false' && steps.protected.outputs.changed == 'false'
+        run: |
+          gh pr merge \
+            "${{ steps.pull_request.outputs.number }}" \
+            --auto \
+            --merge
+
+      - name: Close superseded sync pull requests
+        if: steps.status.outputs.changed == 'true' && steps.merge.outputs.conflict == 'false'
+        env:
+          CURRENT_PR: ${{ steps.pull_request.outputs.number }}
+        run: |
+          gh pr list \
+            --base "$BASE_BRANCH" \
+            --label upstream-sync \
+            --state open \
+            --json number \
+            --jq '.[].number' |
+          while read -r pr_number; do
+            if [ "$pr_number" != "$CURRENT_PR" ]; then
+              gh pr close "$pr_number" \
+                --comment "Superseded by #$CURRENT_PR after a newer upstream merge was prepared."
+            fi
+          done

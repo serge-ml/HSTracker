@@ -10,15 +10,13 @@ import AppKit
 import SwiftyBeaver
 let logger = SwiftyBeaver.self
 import Preferences
-import Sparkle
-import Sentry
 import AppMover
 import Mixpanel
 
 import OAuthSwift
 
 @NSApplicationMain
-class AppDelegate: NSObject, NSApplicationDelegate, SPUStandardUserDriverDelegate, NSUserNotificationCenterDelegate {
+class AppDelegate: NSObject, NSApplicationDelegate, NSUserNotificationCenterDelegate {
     
     static var _instance: AppDelegate?
     static func instance() -> AppDelegate {
@@ -32,7 +30,6 @@ class AppDelegate: NSObject, NSApplicationDelegate, SPUStandardUserDriverDelegat
     var splashscreen: Splashscreen?
     var initalConfig: InitialConfiguration?
     var deckManager: DeckManager?
-    @IBOutlet var sparkleUpdater: SPUStandardUpdaterController!
     var operationQueue: OperationQueue!
     
     var dockMenu = NSMenu(title: "DockMenu")
@@ -51,6 +48,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, SPUStandardUserDriverDelegat
             OpponentTrackersPreferences(nibName: "OpponentTrackersPreferences", bundle: nil),
             BattlegroundsPreferences(nibName: "BattlegroundsPreferences", bundle: nil),
             MercenariesPreferences(nibName: "MercenariesPreferences", bundle: nil),
+            HearthArenaPreferencesController(),
             ImportingPreferences(nibName: "ImportingPreferences", bundle: nil)
         ]
         // Each pane fixes its own width (see PreferencePaneController), so the window keeps a
@@ -72,49 +70,31 @@ class AppDelegate: NSObject, NSApplicationDelegate, SPUStandardUserDriverDelegat
         Race.initialize()
         //setenv("CFNETWORK_DIAGNOSTICS", "3", 1)
         
-        Mixpanel.initialize(token: "da39869dcbc77a77a53506f12ff08094")
-
-        SentrySDK.start { options in
-            options.dsn = "https://254d50452b94680e7ac7968694d1de3a@o35918.ingest.us.sentry.io/92505"
-            options.debug = false // Enabled debug when first installing is always helpful
-            options.appHangTimeoutInterval = 60.0
-
-            // Set tracesSampleRate to 1.0 to capture 100% of transactions for performance monitoring.
-            // We recommend adjusting this value in production.
-            options.tracesSampleRate = 0.0
-
-            // Sample rate for profiling, applied on top of TracesSampleRate.
-            // We recommend adjusting this value in production.
-            options.profilesSampleRate = 0.0
-        }
-        SentrySDK.configureScope { scope in
-#if arch(arm64)
-            let arch = "arm64"
-#else
-            let arch = "x64"
-#endif
-            scope.setTag(value: arch, key: "device.arch")
-        }
+        // Keep upstream call sites safe while preventing this fork from sending
+        // analytics to HearthSim's Mixpanel project. The local-only instance is
+        // opted out before any events are recorded.
+        Mixpanel.initialize(
+            token: "hstracker-arena-disabled",
+            flushInterval: 0,
+            optOutTrackingByDefault: true,
+            serverURL: "https://127.0.0.1"
+        )
+        // Sentry is deliberately not started. Existing upstream capture calls
+        // become no-ops until this fork is configured with its own DSN.
         let options = [
             kAXTrustedCheckOptionPrompt.takeUnretainedValue() as String: true as CFBoolean
         ]
         if !AXIsProcessTrustedWithOptions(options as CFDictionary) {
             logger.debug("Accessibility permission not granted")
         }
-        // Migrate preferences from old bundle ID
-        let oldPrefs = UserDefaults.standard.persistentDomain(forName: "be.michotte.hstracker")
-        if let oldPrefs = oldPrefs, let bundleId = Bundle.main.bundleIdentifier {
-            UserDefaults.standard.setPersistentDomain(oldPrefs, forName: bundleId)
-            UserDefaults.standard.removePersistentDomain(forName: "be.michotte.hstracker")
-            UserDefaults.standard.synchronize()
-        }
+        HearthArenaPreferencesMigrator.runIfNeeded()
         
         // warn user about memory reading
         if Settings.showMemoryReadingWarning {
             let alert = NSAlert()
             alert.addButton(withTitle: String.localizedString("I understand", comment: ""))
             // swiftlint:disable line_length
-            alert.messageText = String.localizedString("HSTracker needs elevated privileges to read data from Hearthstone's memory. If macOS asks you for your system password, do not be alarmed, no changes to your computer will be performed.", comment: "")
+            alert.messageText = String.localizedString("HSTracker Arena needs elevated privileges to read data from Hearthstone's memory. If macOS asks you for your system password, do not be alarmed, no changes to your computer will be performed.", comment: "")
             // swiftlint:enable line_length
             alert.runModal()
             Settings.showMemoryReadingWarning = false
@@ -316,8 +296,6 @@ class AppDelegate: NSObject, NSApplicationDelegate, SPUStandardUserDriverDelegat
             
             self.operationQueue = OperationQueue()
             self.operationQueue.addOperations(operations, waitUntilFinished: true)
-                        // remove any old feed URL to fix users not getting notified of updates
-            UserDefaults.standard.removeObject(forKey: "SUFeedURL")
             
 #if !HSTTEST
             if MonoHelper.load() {
@@ -416,7 +394,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, SPUStandardUserDriverDelegat
     
     func languageChange() {
         NSAlert.show(style: .informational,
-                     message: String.localizedString("You must restart HSTracker for the language change to take effect", comment: ""))
+                     message: String.localizedString("You must restart HSTracker Arena for the language change to take effect", comment: ""))
         
         appWillRestart = true
         NSApplication.shared.terminate(nil)
@@ -670,7 +648,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, SPUStandardUserDriverDelegat
     }
     
     @IBAction func bugReport(_ sender: AnyObject) {
-        if let url = URL(string: "https://github.com/HearthSim/HSTracker/issues") {
+        if let url = URL(string: "https://github.com/serge-ml/HSTracker/issues") {
             NSWorkspace.shared.open(url)
         }
     }
@@ -690,39 +668,4 @@ class AppDelegate: NSObject, NSApplicationDelegate, SPUStandardUserDriverDelegat
         ImageUtils.clearCache()
     }
     
-    // MARK: - Sparkle
-    
-    // Declares that we support gentle scheduled update reminders to Sparkle's standard user driver
-    var supportsGentleScheduledUpdateReminders: Bool {
-        return true
-    }
-        
-    func standardUserDriverShouldHandleShowingScheduledUpdate(_ update: SUAppcastItem, andInImmediateFocus immediateFocus: Bool) -> Bool {
-        // If the standard user driver will show the update in immediate focus (e.g. near app launch),
-        // then let Sparkle take care of showing the update.
-        // Otherwise we will handle showing any other scheduled updates
-        return immediateFocus
-    }
-    
-    func standardUserDriverWillHandleShowingUpdate(_ handleShowingUpdate: Bool, forUpdate update: SUAppcastItem, state: SPUUserUpdateState) {
-        // We will ignore updates that the user driver will handle showing
-        // This includes user initiated (non-scheduled) updates
-        guard !handleShowingUpdate else {
-            return
-        }
-        
-        if !state.userInitiated {
-            // And add a badge to the app's dock icon indicating one alert occurred
-            NSApp.dockTile.badgeLabel = "1"
-            NotificationManager.showNotification(type: .updateAvailable(version: update.displayVersionString))
-        }
-    }
-
-    func standardUserDriverDidReceiveUserAttention(forUpdate update: SUAppcastItem) {
-        // Clear the dock badge indicator for the update
-        NSApp.dockTile.badgeLabel = ""
-    }
-    
-    func standardUserDriverWillFinishUpdateSession() {
-    }
 }

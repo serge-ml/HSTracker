@@ -184,7 +184,7 @@ class Database: NSObject, XMLParserDelegate {
             }
         case "deDE", "enUS", "esES", "esMX", "frFR", "itIT", "jaJP", "koKR", "plPL", "ptBR", "ruRU", "thTH", "zhCN", "zhTW":
             assert(currentElement == .Tag)
-            if elementName == mainLanguage {
+            if elementName == mainLanguage || elementName == "enUS" {
                 currentLanguage = elementName
             }
         default:

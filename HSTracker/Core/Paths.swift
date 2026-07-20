@@ -55,6 +55,10 @@ class Paths {
         return HSTracker.appendingPathComponent("arena", isDirectory: true)
     }()
 
+    static let hearthArena: URL = {
+        return HSTracker.appendingPathComponent("heartharena", isDirectory: true)
+    }()
+
     static let logs: URL = {
         let paths = FileManager.default.urls(for: .libraryDirectory,
                                              in: .userDomainMask)
@@ -66,7 +70,10 @@ class Paths {
 		Creates folders at all path object location
 	*/
     static func initDirs() {
-        let paths = [cards, decks, replays, cardJson, logs, tmpReplays, tiles, arts, cards, cardsBG, arenaJson]
+        let paths = [
+            cards, decks, replays, cardJson, logs, tmpReplays, tiles, arts,
+            cards, cardsBG, arenaJson, hearthArena
+        ]
         let fileManager = FileManager.default
         for path in paths {
             if fileManager.fileExists(atPath: path.absoluteString) { continue }
