@@ -221,10 +221,21 @@ git merge upstream/master
 Resolve conflicts only in the sync branch, then build, run tests, and smoke-test
 both normal tracking and an Arena draft before merging.
 
-The weekly `HSTracker upstream sync` workflow fast-forwards the clean
-`upstream-sync` branch and opens a review PR when official `master` advances.
-It never merges or publishes a release automatically. A merge conflict fails
-the job so it can be resolved deliberately in a local `sync/*` branch.
+The daily `HSTracker upstream sync` workflow fast-forwards the clean
+`upstream-sync` audit branch and opens a unique review PR when official
+`master` advances. Safe PRs receive `upstream-sync` and `automerge` labels and
+are configured for auto-merge after required CI passes. Changes to workflows,
+project identity, entitlements, or scripts pause auto-merge for explicit
+CODEOWNER review. A merge conflict fails safely and creates or updates an Issue
+containing the upstream SHA, fork base SHA, conflicting files, and workflow
+run.
+
+The workflow requires a repository-only fine-grained token in the
+`UPSTREAM_SYNC_TOKEN` Actions secret with `Contents: write` and
+`Pull requests: write`. Prefer a dedicated GitHub App or bot account so the
+owner can review protected changes authored by the sync identity. The built-in
+workflow token handles labels and conflict Issues and never pushes the sync
+branch, so PAT-authored pushes still trigger pull-request CI.
 
 The inherited `fastlane/` and `scripts/*release*` files still describe
 HearthSim's official release infrastructure. They are intentionally not wired

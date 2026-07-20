@@ -16,6 +16,7 @@ permissions:
 
 jobs:
   core:
+    if: github.event_name != 'schedule'
     runs-on: macos-15
     steps:
       - uses: actions/checkout@v4
@@ -79,19 +80,28 @@ jobs:
       - name: Run HearthArena core XCTest suite
         run: swift test
 
-      - name: Validate Xcode project and plist
+      - name: Validate project metadata and scripts
         run: |
           plutil -lint HSTracker.xcodeproj/project.pbxproj
           plutil -lint HSTracker/Info.plist
+          plutil -lint HSTracker/HSTracker.entitlements
+          xmllint --noout HSTracker/UIs/Base.lproj/MainMenu.xib
+          bash -n scripts/cards_download.sh
+          bash -n scripts/hstracker_arena_app.sh
 
   app:
     if: github.event_name != 'schedule'
     runs-on: macos-15
+    env:
+      DERIVED_DATA: ${{ runner.temp }}/DerivedData
     steps:
       - uses: actions/checkout@v4
 
       - name: Resolve Swift packages
-        run: xcodebuild -resolvePackageDependencies -project HSTracker.xcodeproj
+        run: |
+          xcodebuild -resolvePackageDependencies \
+            -project HSTracker.xcodeproj \
+            -derivedDataPath "$DERIVED_DATA"
 
       - name: Build unsigned Debug and Release apps
         run: |
@@ -100,6 +110,7 @@ jobs:
             -scheme HSTracker \
             -configuration Debug \
             -destination "platform=macOS" \
+            -derivedDataPath "$DERIVED_DATA" \
             CODE_SIGNING_ALLOWED=NO
 
           xcodebuild build \
@@ -107,7 +118,35 @@ jobs:
             -scheme HSTracker \
             -configuration Release \
             -destination "platform=macOS" \
+            -derivedDataPath "$DERIVED_DATA" \
             CODE_SIGNING_ALLOWED=NO
+
+      - name: Package unsigned Release artifact and checksum
+        run: |
+          app="$DERIVED_DATA/Build/Products/Release/HSTracker Arena.app"
+          artifact_dir="$RUNNER_TEMP/release-artifact"
+          test -d "$app"
+          mkdir -p "$artifact_dir"
+          ditto \
+            -c \
+            -k \
+            --keepParent \
+            "$app" \
+            "$artifact_dir/HSTracker-Arena-unsigned.zip"
+          cd "$artifact_dir"
+          shasum -a 256 HSTracker-Arena-unsigned.zip \
+            > HSTracker-Arena-unsigned.zip.sha256
+          shasum -a 256 -c HSTracker-Arena-unsigned.zip.sha256
+
+      - name: Upload unsigned Release artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: HSTracker-Arena-unsigned-${{ github.sha }}
+          path: |
+            ${{ runner.temp }}/release-artifact/HSTracker-Arena-unsigned.zip
+            ${{ runner.temp }}/release-artifact/HSTracker-Arena-unsigned.zip.sha256
+          if-no-files-found: error
+          retention-days: 14
 
   parser-health:
     if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
