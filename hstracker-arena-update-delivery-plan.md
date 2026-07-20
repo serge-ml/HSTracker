@@ -186,20 +186,17 @@ pipeline от случайных или опасных upstream-изменени
 9. закрывать устаревшие sync-PR только после появления корректного нового PR;
 10. не выпускать релиз непосредственно из sync workflow.
 
-Особенность GitHub Actions: события, порождённые встроенным `GITHUB_TOKEN`,
-могут не запустить следующий workflow. Поэтому ветку и PR следует создавать от
-имени:
+Особенность GitHub Actions: `pull_request`, порождённый встроенным
+`GITHUB_TOKEN`, создаёт CI run, требующий ручного разрешения. В этом личном
+форке выбран вариант без постоянного PAT: sync workflow создаёт ветку и PR
+короткоживущим `GITHUB_TOKEN`, затем явно запускает CI через
+`workflow_dispatch`. Для `workflow_dispatch` GitHub всегда создаёт отдельный
+run на точном SHA sync-ветки; auto-merge остаётся заблокирован обязательными
+checks `core` и `app`, пока они не завершатся успешно.
 
-- предпочтительно — отдельного GitHub App;
-- допустимо для личного проекта — fine-grained PAT в секрете
-  `UPSTREAM_SYNC_TOKEN`.
-
-Токен должен иметь доступ только к этому репозиторию и минимальные права
-`Contents: write` и `Pull requests: write`.
-
-Если отдельный токен пока не используется, sync workflow должен явно запускать
-CI через `workflow_dispatch` и не выполнять auto-merge до подтверждения, что
-required checks корректно привязаны к PR.
+Права `Actions: write`, `Contents: write`, `Issues: write` и
+`Pull requests: write` выдаются встроенному токену только для sync job.
+Постоянный `UPSTREAM_SYNC_TOKEN` не требуется.
 
 Критерий готовности: тестовый безопасный upstream commit автоматически проходит
 путь от обнаружения до merge; сломанная тестовая ветка не сливается.
@@ -307,11 +304,9 @@ Release job с секретами не должен запускать прои�
 
 ### Этап 6. Настроить секреты
 
-Минимум для sync:
-
-| Secret | Назначение |
-|---|---|
-| `UPSTREAM_SYNC_TOKEN` | Создание sync-ветки и PR с запуском CI |
+Для sync постоянные secrets не нужны: workflow использует короткоживущий
+встроенный `GITHUB_TOKEN` и явно запускает required CI через
+`workflow_dispatch`.
 
 Для Sparkle:
 

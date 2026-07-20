@@ -252,12 +252,12 @@ CODEOWNER review. A merge conflict fails safely and creates or updates an Issue
 containing the upstream SHA, fork base SHA, conflicting files, and workflow
 run.
 
-The workflow requires a repository-only fine-grained token in the
-`UPSTREAM_SYNC_TOKEN` Actions secret with `Contents: write` and
-`Pull requests: write`. Prefer a dedicated GitHub App or bot account so the
-owner can review protected changes authored by the sync identity. The built-in
-workflow token handles labels and conflict Issues and never pushes the sync
-branch, so PAT-authored pushes still trigger pull-request CI.
+The workflow uses only GitHub's short-lived built-in token. A pull request
+created by that token produces a CI run that requires manual approval, so the
+sync job also explicitly dispatches `HSTracker Arena CI` for the exact sync
+branch SHA. GitHub always creates runs for `workflow_dispatch`; required
+`core` and `app` checks still gate auto-merge. No long-lived
+`UPSTREAM_SYNC_TOKEN`, GitHub App, or personal access token is required.
 
 The inherited `fastlane/` and `scripts/*release*` files still describe
 HearthSim's official release infrastructure. They are intentionally not wired
@@ -270,14 +270,9 @@ to any workflow in this fork and must not be used for HSTracker Arena releases.
 Protect the repository default branch and require the `core` and `app` jobs
 from `HSTracker Arena CI`. Require a pull request, dismiss stale approvals,
 require CODEOWNER review for protected delivery files, block force pushes, and
-allow auto-merge. The sync identity must be different from the owner when
-owner approval is required.
-
-Create a fine-grained `UPSTREAM_SYNC_TOKEN` repository secret with access only
-to this repository and:
-
-- Contents: read and write
-- Pull requests: read and write
+allow auto-merge. The sync workflow grants its built-in token `Actions`,
+`Contents`, `Issues`, and `Pull requests` write access only for the duration of
+the job; no persistent sync credential is provisioned.
 
 Create a GitHub Environment named `release`. Initially require owner approval
 before deployment. Add:
@@ -340,8 +335,8 @@ development installations can instead use:
 
 ### Rotating credentials
 
-- Sync token: create the replacement first, update
-  `UPSTREAM_SYNC_TOKEN`, manually run sync, then revoke the old token.
+- Sync uses no persistent credential; GitHub creates and expires a scoped token
+  for every workflow job.
 - Sparkle key: keep the old key long enough to publish a bridge release signed
   by the old key whose app embeds the new public key. Only later sign new
   archives with the new private key. Replacing the feed key without a bridge
