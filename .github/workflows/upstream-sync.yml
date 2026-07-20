@@ -36,35 +36,56 @@ jobs:
       - name: Detect upstream changes
         id: status
         run: |
+          marker=".github/upstream-base.sha"
+          test -s "$marker"
+          upstream_base="$(tr -d '[:space:]' < "$marker")"
+          upstream_sha="$(git rev-parse 'upstream/master^{commit}')"
+          git cat-file -e "$upstream_base^{commit}"
+          if ! git merge-base --is-ancestor "$upstream_base" "$upstream_sha"; then
+            echo "Recorded upstream base is not an ancestor of upstream/master."
+            exit 1
+          fi
+
           echo "base_sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
-          echo "upstream_sha=$(git rev-parse upstream/master)" >> "$GITHUB_OUTPUT"
-          if git merge-base --is-ancestor upstream/master HEAD; then
+          echo "upstream_base=$upstream_base" >> "$GITHUB_OUTPUT"
+          echo "upstream_sha=$upstream_sha" >> "$GITHUB_OUTPUT"
+          if [ "$upstream_base" = "$upstream_sha" ]; then
             echo "changed=false" >> "$GITHUB_OUTPUT"
           else
             echo "changed=true" >> "$GITHUB_OUTPUT"
           fi
 
-      - name: Fast-forward the audit-only upstream branch
-        if: steps.status.outputs.changed == 'true'
-        run: |
-          git fetch origin upstream-sync:refs/remotes/origin/upstream-sync || true
-          if git show-ref --verify --quiet refs/remotes/origin/upstream-sync; then
-            git merge-base --is-ancestor origin/upstream-sync upstream/master
-          fi
-          git push origin upstream/master:refs/heads/upstream-sync
-
-      - name: Merge upstream into a unique review branch
+      - name: Apply the incremental upstream patch to a unique review branch
         if: steps.status.outputs.changed == 'true'
         id: merge
+        env:
+          UPSTREAM_BASE: ${{ steps.status.outputs.upstream_base }}
+          UPSTREAM_SHA: ${{ steps.status.outputs.upstream_sha }}
         run: |
-          short_sha="$(git rev-parse --short=10 upstream/master)"
+          short_sha="${UPSTREAM_SHA:0:10}"
           base_sha="$(git rev-parse --short=8 HEAD)"
           branch="sync/hstracker-$short_sha-$base_sha"
           echo "branch=$branch" >> "$GITHUB_OUTPUT"
 
+          skipped_workflows="$(
+            git diff \
+              --name-only \
+              "$UPSTREAM_BASE" \
+              "$UPSTREAM_SHA" \
+              -- .github/workflows
+          )"
+          {
+            echo "skipped_workflows<<EOF"
+            echo "$skipped_workflows"
+            echo "EOF"
+          } >> "$GITHUB_OUTPUT"
+
           if git ls-remote --exit-code --heads origin "$branch"; then
             git fetch origin "$branch:refs/remotes/origin/$branch"
             git switch --detach "origin/$branch"
+            test "$(
+              tr -d '[:space:]' < .github/upstream-base.sha
+            )" = "$UPSTREAM_SHA"
             echo "conflict=false" >> "$GITHUB_OUTPUT"
             echo "needs_push=false" >> "$GITHUB_OUTPUT"
             exit 0
@@ -75,21 +96,49 @@ jobs:
             "41898282+github-actions[bot]@users.noreply.github.com"
           git switch -c "$branch"
 
-          set +e
-          git merge --no-edit upstream/master
-          merge_status=$?
-          set -e
-          if [ "$merge_status" -ne 0 ]; then
+          patch="$RUNNER_TEMP/upstream.patch"
+          git diff \
+            --binary \
+            --full-index \
+            --find-renames \
+            "$UPSTREAM_BASE" \
+            "$UPSTREAM_SHA" \
+            -- \
+            . \
+            ':(exclude).github/workflows/**' \
+            ':(exclude).github/upstream-base.sha' \
+            > "$patch"
+
+          apply_status=0
+          if [ -s "$patch" ]; then
+            set +e
+            git apply --3way --index "$patch"
+            apply_status=$?
+            set -e
+          fi
+          if [ "$apply_status" -ne 0 ]; then
+            conflict_files="$(
+              git diff --name-only --diff-filter=U
+            )"
+            if [ -z "$conflict_files" ]; then
+              conflict_files="Patch application failed before Git could produce conflict markers."
+            fi
             {
               echo "conflict_files<<EOF"
-              git diff --name-only --diff-filter=U
+              echo "$conflict_files"
               echo "EOF"
             } >> "$GITHUB_OUTPUT"
-            git merge --abort
             echo "conflict=true" >> "$GITHUB_OUTPUT"
             echo "needs_push=false" >> "$GITHUB_OUTPUT"
             exit 0
           fi
+
+          printf '%s\n' "$UPSTREAM_SHA" > .github/upstream-base.sha
+          git add .github/upstream-base.sha
+          git commit \
+            -m "chore: sync official HSTracker upstream" \
+            -m "Upstream-Base: $UPSTREAM_BASE" \
+            -m "Upstream-Commit: $UPSTREAM_SHA"
 
           echo "conflict=false" >> "$GITHUB_OUTPUT"
           echo "needs_push=true" >> "$GITHUB_OUTPUT"
@@ -99,6 +148,7 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
           UPSTREAM_SHA: ${{ steps.status.outputs.upstream_sha }}
+          UPSTREAM_BASE: ${{ steps.status.outputs.upstream_base }}
           BASE_SHA: ${{ steps.status.outputs.base_sha }}
           CONFLICT_FILES: ${{ steps.merge.outputs.conflict_files }}
         run: |
@@ -113,8 +163,9 @@ jobs:
               --jq '.[0].number // empty'
           )"
           body="$(
-            printf '%s\n\n%s\n%s\n%s\n\n%s\n%s\n' \
-              "The automated merge of official HSTracker requires manual resolution." \
+            printf '%s\n\n%s\n%s\n%s\n%s\n\n%s\n%s\n' \
+              "The automated application of official HSTracker changes requires manual resolution." \
+              "- Previous integrated upstream: \`$UPSTREAM_BASE\`" \
               "- Upstream: \`$UPSTREAM_SHA\`" \
               "- Fork base: \`$BASE_SHA\`" \
               "- Workflow run: $run_url" \
@@ -178,9 +229,11 @@ jobs:
         env:
           BRANCH: ${{ steps.merge.outputs.branch }}
           UPSTREAM_SHA: ${{ steps.status.outputs.upstream_sha }}
+          UPSTREAM_BASE: ${{ steps.status.outputs.upstream_base }}
           BASE_SHA: ${{ steps.status.outputs.base_sha }}
           PROTECTED: ${{ steps.protected.outputs.changed }}
           PROTECTED_FILES: ${{ steps.protected.outputs.files }}
+          SKIPPED_WORKFLOWS: ${{ steps.merge.outputs.skipped_workflows }}
         run: |
           pr_number="$(
             gh pr list \
@@ -191,12 +244,18 @@ jobs:
               --jq '.[0].number // empty'
           )"
           if [ -z "$pr_number" ]; then
+            if [ -z "$SKIPPED_WORKFLOWS" ]; then
+              SKIPPED_WORKFLOWS="(none)"
+            fi
             body="$(
-              printf '%s\n\n%s\n%s\n%s\n\n%s\n' \
-                "Automated merge from the official HSTracker repository." \
+              printf '%s\n\n%s\n%s\n%s\n%s\n\n%s\n%s\n\n%s\n' \
+                "Automated incremental update from the official HSTracker repository." \
+                "- Previous integrated upstream: \`$UPSTREAM_BASE\`" \
                 "- Upstream: \`$UPSTREAM_SHA\`" \
                 "- Fork base: \`$BASE_SHA\`" \
                 "- Protected delivery files changed: \`$PROTECTED\`" \
+                "Official upstream workflow files excluded from this fork-owned pipeline:" \
+                "\`\`\`"$'\n'"$SKIPPED_WORKFLOWS"$'\n'"\`\`\`" \
                 "Merge only after required CI passes. Protected delivery changes require explicit owner review."
             )"
             gh pr create \

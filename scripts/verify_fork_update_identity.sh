@@ -4,6 +4,7 @@ set -euo pipefail
 readonly INFO_PLIST="HSTracker/Info.plist"
 readonly PROJECT_FILE="HSTracker.xcodeproj/project.pbxproj"
 readonly PACKAGE_RESOLVED="HSTracker.xcodeproj/project.xcworkspace/xcshareddata/swiftpm/Package.resolved"
+readonly UPSTREAM_BASE=".github/upstream-base.sha"
 readonly EXPECTED_FEED="https://serge-ml.github.io/HSTracker/appcast.xml"
 readonly EXPECTED_PUBLIC_KEY="7l1tt2vHbSr03uOge75vssUgsmcVN56u12/NffbvbAw="
 readonly OFFICIAL_PUBLIC_KEY="FAEVNwLFlLldmu1C6aA0h041sJAP1sWrTjQhE9iw7BE="
@@ -23,6 +24,8 @@ plist_value() {
   fail "unexpected SUPublicEDKey"
 [[ "$(plist_value SUEnableSystemProfiling)" == "false" ]] ||
   fail "system profiling must stay disabled"
+grep -E -q '^[0-9a-f]{40}$' "$UPSTREAM_BASE" ||
+  fail "upstream base marker must contain one full commit SHA"
 
 grep -q 'repositoryURL = "https://github.com/sparkle-project/Sparkle";' \
   "$PROJECT_FILE" ||
