@@ -26,6 +26,7 @@ class Watchers {
     
     static func initialize() {
         arenaWatcher.onCompleteDeck = onDeckCompleted
+        HearthArenaFeatureBootstrap.shared.start(watcher: arenaWatcher)
         baconWatcher.change = onBaconChange
         battlegroundsLeaderboardWatcher.change = { _, args in
             let game = AppDelegate.instance().coreManager.game

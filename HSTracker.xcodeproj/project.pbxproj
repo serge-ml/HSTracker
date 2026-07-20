@@ -1307,7 +1307,6 @@
 		B8D75BEC25BDFA2500446923 /* RealmSwift in Frameworks */ = {isa = PBXBuildFile; productRef = B8D75BEB25BDFA2500446923 /* RealmSwift */; };
 		B8D75BEF25BDFE6D00446923 /* Gzip in Frameworks */ = {isa = PBXBuildFile; productRef = B8D75BEE25BDFE6D00446923 /* Gzip */; };
 		B8D75BF125BDFEDE00446923 /* Gzip in Frameworks */ = {isa = PBXBuildFile; productRef = B8D75BF025BDFEDE00446923 /* Gzip */; };
-		B8D75BF725BE032500446923 /* Sparkle in Frameworks */ = {isa = PBXBuildFile; productRef = B8D75BF625BE032500446923 /* Sparkle */; };
 		B8D8859224F3034700F2F0F2 /* StatusMessageConverter.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8D8859124F3034700F2F0F2 /* StatusMessageConverter.swift */; };
 		B8D8859824F40D4E00F2F0F2 /* ClickableBox.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8D8859724F40D4E00F2F0F2 /* ClickableBox.swift */; };
 		B8D8859A24F4185200F2F0F2 /* BobsBuddyErrorState.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8D8859924F4185200F2F0F2 /* BobsBuddyErrorState.swift */; };
@@ -1485,8 +1484,31 @@
 		F79833971FFF324200D2893E /* Events.swift in Sources */ = {isa = PBXBuildFile; fileRef = F79833961FFF324200D2893E /* Events.swift */; };
 		F7D7A3A62011B67D00E3A5F0 /* Hearthstone.swift in Sources */ = {isa = PBXBuildFile; fileRef = F7D7A3A52011B67D00E3A5F0 /* Hearthstone.swift */; };
 		F7D7A3A72011B67D00E3A5F0 /* Hearthstone.swift in Sources */ = {isa = PBXBuildFile; fileRef = F7D7A3A52011B67D00E3A5F0 /* Hearthstone.swift */; };
-		F7D7A3AE2017B51300E3A5F0 /* dsa_pub.pem in Resources */ = {isa = PBXBuildFile; fileRef = F7D7A3AD2017B51300E3A5F0 /* dsa_pub.pem */; };
 		F7ED551A212A40D90085ABA9 /* UploadCollectionData.swift in Sources */ = {isa = PBXBuildFile; fileRef = E30590BA21174FC900679D66 /* UploadCollectionData.swift */; };
+		C0D3C0010000000000000001 /* ArenaOffer.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0D3B0010000000000000001 /* ArenaOffer.swift */; };
+		C0D3C0010000000000000002 /* TierRating.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0D3B0010000000000000002 /* TierRating.swift */; };
+		C0D3C0010000000000000003 /* ArenaRatedCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0D3B0010000000000000003 /* ArenaRatedCard.swift */; };
+		C0D3C0010000000000000004 /* HearthArenaTextNormalizer.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0D3B0010000000000000004 /* HearthArenaTextNormalizer.swift */; };
+		C0D3C0010000000000000005 /* HearthArenaHTMLParser.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0D3B0010000000000000005 /* HearthArenaHTMLParser.swift */; };
+		C0D3C0010000000000000006 /* TierListValidator.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0D3B0010000000000000006 /* TierListValidator.swift */; };
+		C0D3C0010000000000000007 /* TierListCache.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0D3B0010000000000000007 /* TierListCache.swift */; };
+		C0D3C0010000000000000008 /* HearthArenaClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0D3B0010000000000000008 /* HearthArenaClient.swift */; };
+		C0D3C0010000000000000009 /* CardIdentityResolver.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0D3B0010000000000000009 /* CardIdentityResolver.swift */; };
+		C0D3C0010000000000000010 /* HearthArenaTierListStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0D3B0010000000000000010 /* HearthArenaTierListStore.swift */; };
+		C0D3C0010000000000000011 /* ArenaChoiceAdapter.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0D3B0010000000000000011 /* ArenaChoiceAdapter.swift */; };
+		C0D3C0010000000000000012 /* HearthArenaFeatureBootstrap.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0D3B0010000000000000012 /* HearthArenaFeatureBootstrap.swift */; };
+		C0D3C0010000000000000013 /* ArenaOverlayWindow.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0D3B0010000000000000013 /* ArenaOverlayWindow.swift */; };
+		C0D3C0010000000000000014 /* ArenaOverlayLayout.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0D3B0010000000000000014 /* ArenaOverlayLayout.swift */; };
+		C0D3C0010000000000000015 /* ArenaCardRatingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0D3B0010000000000000015 /* ArenaCardRatingView.swift */; };
+		C0D3C0010000000000000016 /* ArenaOverlayController.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0D3B0010000000000000016 /* ArenaOverlayController.swift */; };
+		C0D3C0010000000000000017 /* HearthArenaSettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0D3B0010000000000000017 /* HearthArenaSettings.swift */; };
+		C0D3C0010000000000000018 /* HearthArenaPreferencesController.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0D3B0010000000000000018 /* HearthArenaPreferencesController.swift */; };
+		C0D3C0010000000000000019 /* HearthArenaPreferencesMigrator.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0D3B0010000000000000019 /* HearthArenaPreferencesMigrator.swift */; };
+		C0D3C0010000000000000020 /* HearthArenaDiagnostics.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0D3B0010000000000000020 /* HearthArenaDiagnostics.swift */; };
+		C0D3C0010000000000000021 /* ArenaOfferStateMachine.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0D3B0010000000000000021 /* ArenaOfferStateMachine.swift */; };
+		C0D3C0010000000000000022 /* ArenaPackageRatingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0D3B0010000000000000022 /* ArenaPackageRatingView.swift */; };
+		C0D3C0020000000000000001 /* heartharena-tierlist-sample.html in Resources */ = {isa = PBXBuildFile; fileRef = C0D3B0020000000000000001 /* heartharena-tierlist-sample.html */; };
+		C0D3C0020000000000000002 /* HearthArenaOverlayTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0D3B0020000000000000002 /* HearthArenaOverlayTests.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -1626,7 +1648,7 @@
 		439212141DEF5A5E0017AAE5 /* MultiClassGroup.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = MultiClassGroup.swift; sourceTree = "<group>"; };
 		439B1DF51E86CC280098BBBC /* DatabaseTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = DatabaseTests.swift; sourceTree = "<group>"; };
 		439BD8C81EBCD40200959F69 /* EnumTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = EnumTests.swift; sourceTree = "<group>"; };
-		439C7E481C7772C000D29859 /* HSTracker.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = HSTracker.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		439C7E481C7772C000D29859 /* HSTracker Arena.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "HSTracker Arena.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 		439C7E4B1C7772C000D29859 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = AppDelegate.swift; path = HSTracker/AppDelegate.swift; sourceTree = "<group>"; };
 		439C7E571C7772C000D29859 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; name = Info.plist; path = HSTracker/Info.plist; sourceTree = "<group>"; };
 		439C7E5C1C7772C100D29859 /* HSTrackerTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = HSTrackerTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -2695,7 +2717,30 @@
 		F719B889200ACAE3004F5E36 /* DefaultDecks.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DefaultDecks.swift; sourceTree = "<group>"; };
 		F79833961FFF324200D2893E /* Events.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Events.swift; sourceTree = "<group>"; };
 		F7D7A3A52011B67D00E3A5F0 /* Hearthstone.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Hearthstone.swift; sourceTree = "<group>"; };
-		F7D7A3AD2017B51300E3A5F0 /* dsa_pub.pem */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; name = dsa_pub.pem; path = HSTracker/Resources/dsa_pub.pem; sourceTree = SOURCE_ROOT; };
+		C0D3B0010000000000000001 /* ArenaOffer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ArenaOffer.swift; sourceTree = "<group>"; };
+		C0D3B0010000000000000002 /* TierRating.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TierRating.swift; sourceTree = "<group>"; };
+		C0D3B0010000000000000003 /* ArenaRatedCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ArenaRatedCard.swift; sourceTree = "<group>"; };
+		C0D3B0010000000000000004 /* HearthArenaTextNormalizer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HearthArenaTextNormalizer.swift; sourceTree = "<group>"; };
+		C0D3B0010000000000000005 /* HearthArenaHTMLParser.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HearthArenaHTMLParser.swift; sourceTree = "<group>"; };
+		C0D3B0010000000000000006 /* TierListValidator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TierListValidator.swift; sourceTree = "<group>"; };
+		C0D3B0010000000000000007 /* TierListCache.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TierListCache.swift; sourceTree = "<group>"; };
+		C0D3B0010000000000000008 /* HearthArenaClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HearthArenaClient.swift; sourceTree = "<group>"; };
+		C0D3B0010000000000000009 /* CardIdentityResolver.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CardIdentityResolver.swift; sourceTree = "<group>"; };
+		C0D3B0010000000000000010 /* HearthArenaTierListStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HearthArenaTierListStore.swift; sourceTree = "<group>"; };
+		C0D3B0010000000000000011 /* ArenaChoiceAdapter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ArenaChoiceAdapter.swift; sourceTree = "<group>"; };
+		C0D3B0010000000000000012 /* HearthArenaFeatureBootstrap.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HearthArenaFeatureBootstrap.swift; sourceTree = "<group>"; };
+		C0D3B0010000000000000013 /* ArenaOverlayWindow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ArenaOverlayWindow.swift; sourceTree = "<group>"; };
+		C0D3B0010000000000000014 /* ArenaOverlayLayout.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ArenaOverlayLayout.swift; sourceTree = "<group>"; };
+		C0D3B0010000000000000015 /* ArenaCardRatingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ArenaCardRatingView.swift; sourceTree = "<group>"; };
+		C0D3B0010000000000000016 /* ArenaOverlayController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ArenaOverlayController.swift; sourceTree = "<group>"; };
+		C0D3B0010000000000000017 /* HearthArenaSettings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HearthArenaSettings.swift; sourceTree = "<group>"; };
+		C0D3B0010000000000000018 /* HearthArenaPreferencesController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HearthArenaPreferencesController.swift; sourceTree = "<group>"; };
+		C0D3B0010000000000000019 /* HearthArenaPreferencesMigrator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HearthArenaPreferencesMigrator.swift; sourceTree = "<group>"; };
+		C0D3B0010000000000000020 /* HearthArenaDiagnostics.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HearthArenaDiagnostics.swift; sourceTree = "<group>"; };
+		C0D3B0010000000000000021 /* ArenaOfferStateMachine.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ArenaOfferStateMachine.swift; sourceTree = "<group>"; };
+		C0D3B0010000000000000022 /* ArenaPackageRatingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ArenaPackageRatingView.swift; sourceTree = "<group>"; };
+		C0D3B0020000000000000001 /* heartharena-tierlist-sample.html */ = {isa = PBXFileReference; lastKnownFileType = text.html; path = HearthArenaOverlay/Fixtures/heartharena-tierlist-sample.html; sourceTree = "<group>"; };
+		C0D3B0020000000000000002 /* HearthArenaOverlayTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HearthArenaOverlay/HearthArenaOverlayTests.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
@@ -2708,7 +2753,6 @@
 			buildActionMask = 2147483647;
 			files = (
 				B882CC902FBBE364002234D6 /* libcoreclr.dylib in Frameworks */,
-				B8D75BF725BE032500446923 /* Sparkle in Frameworks */,
 				B8D75BBD25BCEACB00446923 /* TextAttributes in Frameworks */,
 				4367899F1CAC05DD00C962D1 /* Cocoa.framework in Frameworks */,
 				B8D75BD925BDD47A00446923 /* FMDB in Frameworks */,
@@ -2753,6 +2797,83 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		C0D3A0000000000000000001 /* HearthArenaOverlay */ = {
+			isa = PBXGroup;
+			children = (
+				C0D3A0000000000000000002 /* Domain */,
+				C0D3A0000000000000000003 /* Data */,
+				C0D3A0000000000000000004 /* Integration */,
+				C0D3A0000000000000000005 /* UI */,
+				C0D3A0000000000000000006 /* Settings */,
+				C0D3A0000000000000000007 /* Diagnostics */,
+			);
+			path = HearthArenaOverlay;
+			sourceTree = "<group>";
+		};
+		C0D3A0000000000000000002 /* Domain */ = {
+			isa = PBXGroup;
+			children = (
+				C0D3B0010000000000000001 /* ArenaOffer.swift */,
+				C0D3B0010000000000000021 /* ArenaOfferStateMachine.swift */,
+				C0D3B0010000000000000003 /* ArenaRatedCard.swift */,
+				C0D3B0010000000000000002 /* TierRating.swift */,
+			);
+			path = Domain;
+			sourceTree = "<group>";
+		};
+		C0D3A0000000000000000003 /* Data */ = {
+			isa = PBXGroup;
+			children = (
+				C0D3B0010000000000000009 /* CardIdentityResolver.swift */,
+				C0D3B0010000000000000008 /* HearthArenaClient.swift */,
+				C0D3B0010000000000000005 /* HearthArenaHTMLParser.swift */,
+				C0D3B0010000000000000010 /* HearthArenaTierListStore.swift */,
+				C0D3B0010000000000000004 /* HearthArenaTextNormalizer.swift */,
+				C0D3B0010000000000000007 /* TierListCache.swift */,
+				C0D3B0010000000000000006 /* TierListValidator.swift */,
+			);
+			path = Data;
+			sourceTree = "<group>";
+		};
+		C0D3A0000000000000000004 /* Integration */ = {
+			isa = PBXGroup;
+			children = (
+				C0D3B0010000000000000011 /* ArenaChoiceAdapter.swift */,
+				C0D3B0010000000000000012 /* HearthArenaFeatureBootstrap.swift */,
+			);
+			path = Integration;
+			sourceTree = "<group>";
+		};
+		C0D3A0000000000000000005 /* UI */ = {
+			isa = PBXGroup;
+			children = (
+				C0D3B0010000000000000015 /* ArenaCardRatingView.swift */,
+				C0D3B0010000000000000022 /* ArenaPackageRatingView.swift */,
+				C0D3B0010000000000000016 /* ArenaOverlayController.swift */,
+				C0D3B0010000000000000014 /* ArenaOverlayLayout.swift */,
+				C0D3B0010000000000000013 /* ArenaOverlayWindow.swift */,
+			);
+			path = UI;
+			sourceTree = "<group>";
+		};
+		C0D3A0000000000000000006 /* Settings */ = {
+			isa = PBXGroup;
+			children = (
+				C0D3B0010000000000000018 /* HearthArenaPreferencesController.swift */,
+				C0D3B0010000000000000019 /* HearthArenaPreferencesMigrator.swift */,
+				C0D3B0010000000000000017 /* HearthArenaSettings.swift */,
+			);
+			path = Settings;
+			sourceTree = "<group>";
+		};
+		C0D3A0000000000000000007 /* Diagnostics */ = {
+			isa = PBXGroup;
+			children = (
+				C0D3B0010000000000000020 /* HearthArenaDiagnostics.swift */,
+			);
+			path = Diagnostics;
+			sourceTree = "<group>";
+		};
 		1CCB4AE91E8A46F0003FD1AD /* Parsers */ = {
 			isa = PBXGroup;
 			children = (
@@ -2980,7 +3101,7 @@
 		439C7E491C7772C000D29859 /* Products */ = {
 			isa = PBXGroup;
 			children = (
-				439C7E481C7772C000D29859 /* HSTracker.app */,
+				439C7E481C7772C000D29859 /* HSTracker Arena.app */,
 				439C7E5C1C7772C100D29859 /* HSTrackerTests.xctest */,
 			);
 			name = Products;
@@ -2997,6 +3118,7 @@
 				439C7E7A1C777CC000D29859 /* Database */,
 				43873CBF1CA6E68D00F01CB4 /* Debug */,
 				4323C5E31E1695DD00C97896 /* HearthMirror */,
+				C0D3A0000000000000000001 /* HearthArenaOverlay */,
 				B82AE5FB28BE8631004A8FE0 /* HearthMirror-version.txt */,
 				43B695551C90653A00F4D0AC /* Hearthstone */,
 				B854622B2CE007A90083BB31 /* HearthWatcher */,
@@ -3019,6 +3141,8 @@
 		439C7E5F1C7772C100D29859 /* HSTrackerTests */ = {
 			isa = PBXGroup;
 			children = (
+				C0D3B0020000000000000002 /* HearthArenaOverlayTests.swift */,
+				C0D3B0020000000000000001 /* heartharena-tierlist-sample.html */,
 				1CF1B5891E81426D007DCBF2 /* AlgorithmTests.swift */,
 				439C7E601C7772C100D29859 /* HSTrackerTests.swift */,
 				1CF1B58B1E815810007DCBF2 /* LogReaderTests.swift */,
@@ -4632,7 +4756,6 @@
 		F7D7A3AC2017B4FD00E3A5F0 /* Misc */ = {
 			isa = PBXGroup;
 			children = (
-				F7D7A3AD2017B51300E3A5F0 /* dsa_pub.pem */,
 			);
 			path = Misc;
 			sourceTree = "<group>";
@@ -4690,7 +4813,6 @@
 				B8D75BD825BDD47A00446923 /* FMDB */,
 				B8D75BE925BDF92B00446923 /* RealmSwift */,
 				B8D75BEE25BDFE6D00446923 /* Gzip */,
-				B8D75BF625BE032500446923 /* Sparkle */,
 				B82E7B18262A88DB00C42EF0 /* BigInt */,
 				B85920952B4C73B300B907A4 /* CustomToolTip */,
 				B8196F102CC1BB58007C0371 /* Sentry */,
@@ -4699,7 +4821,7 @@
 				3CB1A35C2E8C3A400090486F /* Mixpanel */,
 			);
 			productName = HSTracker;
-			productReference = 439C7E481C7772C000D29859 /* HSTracker.app */;
+			productReference = 439C7E481C7772C000D29859 /* HSTracker Arena.app */;
 			productType = "com.apple.product-type.application";
 		};
 		439C7E5B1C7772C100D29859 /* HSTrackerTests */ = {
@@ -4791,7 +4913,6 @@
 				B8D75BD725BDD47A00446923 /* XCRemoteSwiftPackageReference "fmdb" */,
 				B8D75BE825BDF92B00446923 /* XCRemoteSwiftPackageReference "realm-cocoa" */,
 				B8D75BED25BDFE6D00446923 /* XCRemoteSwiftPackageReference "GzipSwift" */,
-				B8D75BF525BE032500446923 /* XCRemoteSwiftPackageReference "Sparkle" */,
 				B82E7B17262A88DB00C42EF0 /* XCRemoteSwiftPackageReference "BigInt" */,
 				B85920942B4C73B300B907A4 /* XCRemoteSwiftPackageReference "CustomToolTip" */,
 				B8196F0F2CC1BB58007C0371 /* XCRemoteSwiftPackageReference "sentry-cocoa" */,
@@ -4901,7 +5022,6 @@
 				B8196F272CCD4135007C0371 /* CountersOverlay.xib in Resources */,
 				B89899682CB5F94C0011B184 /* ActiveEffectsOverlay.xib in Resources */,
 				B82029542CD459E800C19A8C /* GridCardImageItem.xib in Resources */,
-				F7D7A3AE2017B51300E3A5F0 /* dsa_pub.pem in Resources */,
 				B83CF371294E4379003C9062 /* BattlegroundsCompositionPopularityRow.xib in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -4910,6 +5030,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				C0D3C0020000000000000001 /* heartharena-tierlist-sample.html in Resources */,
 				B8BA180328F113DA004D40ED /* BattlegroundsTribe.xib in Resources */,
 				B8BA180228F113B2004D40ED /* LinkOpponentDeckPanel.xib in Resources */,
 				B8BA180028F1101D004D40ED /* Assets.xcassets in Resources */,
@@ -4978,17 +5099,18 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "# Change SHA1 here to change the version of HearthMirror used by HSTracker\nSHA1=$(cat $SRCROOT/HSTracker/HearthMirror-version.txt)\n\nDIR=\"$SRCROOT/downloaded-frameworks/HearthMirror\"\nVERSION_FILE=\"$DIR/HearthMirror.sha1\"\nZIP_FILE=\"$DIR/HearthMirror.framework.zip\"\nDSYM_ZIP_FILE=\"$DIR/HearthMirror.framework.dSYM.zip\"\n\nif [ \"$(cat $VERSION_FILE)\" != \"$SHA1\"  ]\nthen\n    set -e\n    \n    rm -rf \"$DIR\"\n    mkdir -p \"$DIR\"\n    wget \"https://libs.hearthsim.net/hstracker/$SHA1/HearthMirror.framework.zip\" -O \"$ZIP_FILE\"\n    wget \"https://libs.hearthsim.net/hstracker/$SHA1/HearthMirror.framework.dSYM.zip\" -O \"$DSYM_ZIP_FILE\"\n    unzip -d \"$DIR\" \"$ZIP_FILE\"\n    unzip -d \"$DIR\" \"$DSYM_ZIP_FILE\"\n    echo \"$SHA1\" > \"$VERSION_FILE\"\nfi\n\n\n\n";
+			shellScript = "# Change SHA1 here to change the version of HearthMirror used by HSTracker\nSHA1=$(cat \"$SRCROOT/HSTracker/HearthMirror-version.txt\")\n\nDIR=\"$SRCROOT/downloaded-frameworks/HearthMirror\"\nVERSION_FILE=\"$DIR/HearthMirror.sha1\"\nZIP_FILE=\"$DIR/HearthMirror.framework.zip\"\nDSYM_ZIP_FILE=\"$DIR/HearthMirror.framework.dSYM.zip\"\n\nif [ \"$(cat \"$VERSION_FILE\" 2>/dev/null)\" != \"$SHA1\" ]\nthen\n    set -e\n\n    rm -rf \"$DIR\"\n    mkdir -p \"$DIR\"\n    curl --fail --location --retry 3 --output \"$ZIP_FILE\" \"https://libs.hearthsim.net/hstracker/$SHA1/HearthMirror.framework.zip\"\n    curl --fail --location --retry 3 --output \"$DSYM_ZIP_FILE\" \"https://libs.hearthsim.net/hstracker/$SHA1/HearthMirror.framework.dSYM.zip\"\n    unzip -d \"$DIR\" \"$ZIP_FILE\"\n    unzip -d \"$DIR\" \"$DSYM_ZIP_FILE\"\n    echo \"$SHA1\" > \"$VERSION_FILE\"\nfi\n\n\n\n";
 		};
 		B83355B724F89D1A0025F644 /* Embed Mono */ = {
 			isa = PBXShellScriptBuildPhase;
+			alwaysOutOfDate = 1;
 			buildActionMask = 2147483647;
 			files = (
 			);
 			inputFileListPaths = (
 			);
 			inputPaths = (
-				"$(SRCROOT)/mono-version.txt",
+				"$(SRCROOT)/HSTracker/mono-version.txt",
 			);
 			name = "Embed Mono";
 			outputFileListPaths = (
@@ -5015,11 +5137,11 @@
 			outputFileListPaths = (
 			);
 			outputPaths = (
-				"$(SRC_ROOT)/downloaded-frameworks/mono/LICENSE.TXT",
+				"$(SRCROOT)/downloaded-frameworks/mono/LICENSE.TXT",
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "# Type a script or drag a script file from your workspace to insert its path.\nMONO_VERSION=$(cat $SRCROOT/HSTracker/mono-version.txt)\n\nDIR=\"$SRCROOT/downloaded-frameworks/mono\"\nmkdir -p $DIR\n\nwget  \"https://www.nuget.org/api/v2/package/Microsoft.NETCore.App.Runtime.Mono.osx-x64/${MONO_VERSION}\" -P \"$DIR\" -O \"$DIR/mono-${MONO_VERSION}-x64.zip\"\nunzip -n \"$DIR/mono-${MONO_VERSION}-x64.zip\" -d \"$DIR\"\n\nwget  \"https://www.nuget.org/api/v2/package/Microsoft.NETCore.App.Runtime.Mono.osx-arm64/${MONO_VERSION}\" -P \"$DIR\" -O \"$DIR/mono-${MONO_VERSION}-arm64.zip\"\nunzip -n \"$DIR/mono-${MONO_VERSION}-arm64.zip\" -d \"$DIR\"\n\n\nmkdir -p \"$DIR/universal\"\nLIBRARIES=\"libcoreclr.dylib libSystem.Native.dylib\"\nfor lib in $LIBRARIES; do\n    lipo -create \"$DIR/runtimes/osx-arm64/native/$lib\" \"$DIR/runtimes/osx-x64/native/$lib\" -output \"$DIR/universal/$lib\"\ndone\n";
+			shellScript = "set -e\n\nMONO_VERSION=$(cat \"$SRCROOT/HSTracker/mono-version.txt\")\n\nDIR=\"$SRCROOT/downloaded-frameworks/mono\"\nmkdir -p \"$DIR\"\n\nX64_ZIP=\"$DIR/mono-${MONO_VERSION}-x64.zip\"\nARM64_ZIP=\"$DIR/mono-${MONO_VERSION}-arm64.zip\"\n\ncurl --fail --location --retry 3 --output \"$X64_ZIP\" \"https://www.nuget.org/api/v2/package/Microsoft.NETCore.App.Runtime.Mono.osx-x64/${MONO_VERSION}\"\nunzip -o \"$X64_ZIP\" -d \"$DIR\"\n\ncurl --fail --location --retry 3 --output \"$ARM64_ZIP\" \"https://www.nuget.org/api/v2/package/Microsoft.NETCore.App.Runtime.Mono.osx-arm64/${MONO_VERSION}\"\nunzip -o \"$ARM64_ZIP\" -d \"$DIR\"\n\nmkdir -p \"$DIR/universal\"\nLIBRARIES=\"libcoreclr.dylib libSystem.Native.dylib\"\nfor lib in $LIBRARIES; do\n    lipo -create \"$DIR/runtimes/osx-arm64/native/$lib\" \"$DIR/runtimes/osx-x64/native/$lib\" -output \"$DIR/universal/$lib\"\ndone\n";
 			showEnvVarsInLog = 0;
 		};
 		B8643D122759872D00B2D708 /* Download enUS cards */ = {
@@ -5042,6 +5164,7 @@
 		};
 		B86F2153255DBFFC008D522A /* Download cards XML */ = {
 			isa = PBXShellScriptBuildPhase;
+			alwaysOutOfDate = 1;
 			buildActionMask = 2147483647;
 			files = (
 			);
@@ -5058,7 +5181,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "VERSION=$(cat $SRCROOT/HSTracker/cards-version.txt)\n\nLOCATION=\"${BUILT_PRODUCTS_DIR}\"/\"${UNLOCALIZED_RESOURCES_FOLDER_PATH}\"/Resources/Cards\nmkdir -p \"${LOCATION}\"\n\nCARDDEFS=\"https://github.com/HearthSim/hsdata/raw\"\n\necho \"Downloading CardDefs.xml\"\ncurl -L -z \"${LOCATION}/CardDefs.xml\" -o \"${LOCATION}/CardDefs.xml\" \"$CARDDEFS/$VERSION/CardDefs.xml\"\n";
+			shellScript = "set -e\n\nVERSION=$(cat \"$SRCROOT/HSTracker/cards-version.txt\")\n\nLOCATION=\"${BUILT_PRODUCTS_DIR}/${UNLOCALIZED_RESOURCES_FOLDER_PATH}/Resources/Cards\"\nCACHE_DIR=\"$SRCROOT/downloaded-frameworks/cards/$VERSION\"\nCACHE_FILE=\"$CACHE_DIR/CardDefs.xml\"\nmkdir -p \"$LOCATION\" \"$CACHE_DIR\"\n\nCARDDEFS=\"https://github.com/HearthSim/hsdata/raw\"\n\nif [ ! -s \"$CACHE_FILE\" ]; then\n    echo \"Downloading CardDefs.xml\"\n    curl --fail --location --retry 3 --output \"$CACHE_FILE.tmp\" \"$CARDDEFS/$VERSION/CardDefs.xml\"\n    mv \"$CACHE_FILE.tmp\" \"$CACHE_FILE\"\nfi\n\ncp \"$CACHE_FILE\" \"$LOCATION/CardDefs.xml\"\n";
 			showEnvVarsInLog = 0;
 		};
 		B8D8859B24F4333000F2F0F2 /* Download BobsBuddy and HearthDb */ = {
@@ -5081,7 +5204,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "# change version here when needed\nset -e\n\nDIR=\"$SRCROOT/HSTracker/Resources/Managed\"\n\nmkdir -p $DIR/arm64\nmkdir -p $DIR/x64\n\nwget -N \"https://libs.hearthsim.net/hdt/HearthDb.zip\" -P \"$DIR\" -O \"$SRCROOT/downloaded-frameworks/HearthDb.zip\"\nwget -N \"https://libs.hearthsim.net/hdt/BobsBuddy.zip\" -P \"$DIR\" -O \"$SRCROOT/downloaded-frameworks/BobsBuddy.zip\"\n\nunzip -o \"$SRCROOT/downloaded-frameworks/HearthDb.zip\" -d \"$DIR\"\nunzip -o \"$SRCROOT/downloaded-frameworks/BobsBuddy.zip\" -d \"$DIR\"\n";
+			shellScript = "# change version here when needed\nset -e\n\nDIR=\"$SRCROOT/HSTracker/Resources/Managed\"\nDOWNLOAD_DIR=\"$SRCROOT/downloaded-frameworks\"\n\nmkdir -p \"$DIR/arm64\" \"$DIR/x64\" \"$DOWNLOAD_DIR\"\n\ncurl --fail --location --retry 3 --output \"$DOWNLOAD_DIR/HearthDb.zip\" \"https://libs.hearthsim.net/hdt/HearthDb.zip\"\ncurl --fail --location --retry 3 --output \"$DOWNLOAD_DIR/BobsBuddy.zip\" \"https://libs.hearthsim.net/hdt/BobsBuddy.zip\"\n\nunzip -o \"$DOWNLOAD_DIR/HearthDb.zip\" -d \"$DIR\"\nunzip -o \"$DOWNLOAD_DIR/BobsBuddy.zip\" -d \"$DIR\"\n";
 		};
 /* End PBXShellScriptBuildPhase section */
 
@@ -5090,6 +5213,28 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				C0D3C0010000000000000001 /* ArenaOffer.swift in Sources */,
+				C0D3C0010000000000000002 /* TierRating.swift in Sources */,
+				C0D3C0010000000000000003 /* ArenaRatedCard.swift in Sources */,
+				C0D3C0010000000000000004 /* HearthArenaTextNormalizer.swift in Sources */,
+				C0D3C0010000000000000005 /* HearthArenaHTMLParser.swift in Sources */,
+				C0D3C0010000000000000006 /* TierListValidator.swift in Sources */,
+				C0D3C0010000000000000007 /* TierListCache.swift in Sources */,
+				C0D3C0010000000000000008 /* HearthArenaClient.swift in Sources */,
+				C0D3C0010000000000000009 /* CardIdentityResolver.swift in Sources */,
+				C0D3C0010000000000000010 /* HearthArenaTierListStore.swift in Sources */,
+				C0D3C0010000000000000011 /* ArenaChoiceAdapter.swift in Sources */,
+				C0D3C0010000000000000012 /* HearthArenaFeatureBootstrap.swift in Sources */,
+				C0D3C0010000000000000013 /* ArenaOverlayWindow.swift in Sources */,
+				C0D3C0010000000000000014 /* ArenaOverlayLayout.swift in Sources */,
+				C0D3C0010000000000000015 /* ArenaCardRatingView.swift in Sources */,
+				C0D3C0010000000000000016 /* ArenaOverlayController.swift in Sources */,
+				C0D3C0010000000000000017 /* HearthArenaSettings.swift in Sources */,
+				C0D3C0010000000000000018 /* HearthArenaPreferencesController.swift in Sources */,
+				C0D3C0010000000000000019 /* HearthArenaPreferencesMigrator.swift in Sources */,
+				C0D3C0010000000000000020 /* HearthArenaDiagnostics.swift in Sources */,
+				C0D3C0010000000000000021 /* ArenaOfferStateMachine.swift in Sources */,
+				C0D3C0010000000000000022 /* ArenaPackageRatingView.swift in Sources */,
 				B8956CFD25509B3F0073D70C /* BattlegroundsMinionView.swift in Sources */,
 				B86D89E62D95EC4D00AB65A5 /* FerociousFelbat.swift in Sources */,
 				B85462142CDEB9FF0083BB31 /* CrewmateGenerator.swift in Sources */,
@@ -6126,6 +6271,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				C0D3C0020000000000000002 /* HearthArenaOverlayTests.swift in Sources */,
 				B86FFA7F299C68870093689E /* NSButton.swift in Sources */,
 				B86FFA7E299C67B50093689E /* ViewModel.swift in Sources */,
 				B86FFA7D299C67AE0093689E /* Debounce.swift in Sources */,
@@ -6819,8 +6965,9 @@
 					"-ld_classic",
 				);
 				OTHER_SWIFT_FLAGS = "-DDEBUG $(inherited)";
-				PRODUCT_BUNDLE_IDENTIFIER = net.hearthsim.hstracker;
-				PRODUCT_NAME = "$(TARGET_NAME)";
+				PRODUCT_BUNDLE_IDENTIFIER = "io.github.serge-ml.hstrackerarena";
+				PRODUCT_MODULE_NAME = HSTracker;
+				PRODUCT_NAME = "HSTracker Arena";
 				PROVISIONING_PROFILE_SPECIFIER = "";
 				SWIFT_INCLUDE_PATHS = "";
 				SWIFT_OBJC_BRIDGING_HEADER = "HSTracker/HSTracker-Bridging-Header.h";
@@ -6881,8 +7028,9 @@
 					"$(inherited)",
 					"-ld_classic",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = net.hearthsim.hstracker;
-				PRODUCT_NAME = "$(TARGET_NAME)";
+				PRODUCT_BUNDLE_IDENTIFIER = "io.github.serge-ml.hstrackerarena";
+				PRODUCT_MODULE_NAME = HSTracker;
+				PRODUCT_NAME = "HSTracker Arena";
 				PROVISIONING_PROFILE_SPECIFIER = "";
 				SWIFT_COMPILATION_MODE = wholemodule;
 				SWIFT_INCLUDE_PATHS = "";
@@ -6908,7 +7056,15 @@
 				);
 				HEADER_SEARCH_PATHS = (
 					"$(SDKROOT)/usr/include/libxml2",
-					"$(PROJECT_DIR)/downloaded-frameworks/mono/runtimes/ios-arm/native/include/mono-2.0",
+					"$(PROJECT_DIR)/downloaded-frameworks/mono/runtimes/osx-x64/native/include/mono-2.0",
+				);
+				"HEADER_SEARCH_PATHS[arch=arm64]" = (
+					"$(SDKROOT)/usr/include/libxml2",
+					"$(PROJECT_DIR)/downloaded-frameworks/mono/runtimes/osx-arm64/native/include/mono-2.0",
+				);
+				"HEADER_SEARCH_PATHS[arch=x86_64]" = (
+					"$(SDKROOT)/usr/include/libxml2",
+					"$(PROJECT_DIR)/downloaded-frameworks/mono/runtimes/osx-x64/native/include/mono-2.0",
 				);
 				INFOPLIST_FILE = HSTrackerTests/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (
@@ -6919,7 +7075,7 @@
 				LIBRARY_SEARCH_PATHS = "$(PROJECT_DIR)/downloaded-frameworks/mono/runtimes/osx-x64/native";
 				MACOSX_DEPLOYMENT_TARGET = 11.0;
 				OTHER_SWIFT_FLAGS = "-DHSTTEST";
-				PRODUCT_BUNDLE_IDENTIFIER = net.hearthsim.hstracker.HSTrackerTests;
+				PRODUCT_BUNDLE_IDENTIFIER = "io.github.serge-ml.hstrackerarena.tests";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_OBJC_BRIDGING_HEADER = "HSTrackerTests/HSTracker-Test-Bridging-Header.h";
 				SWIFT_SWIFT3_OBJC_INFERENCE = Default;
@@ -6942,7 +7098,15 @@
 				);
 				HEADER_SEARCH_PATHS = (
 					"$(SDKROOT)/usr/include/libxml2",
-					"$(PROJECT_DIR)/downloaded-frameworks/mono/runtimes/ios-arm/native/include/mono-2.0",
+					"$(PROJECT_DIR)/downloaded-frameworks/mono/runtimes/osx-x64/native/include/mono-2.0",
+				);
+				"HEADER_SEARCH_PATHS[arch=arm64]" = (
+					"$(SDKROOT)/usr/include/libxml2",
+					"$(PROJECT_DIR)/downloaded-frameworks/mono/runtimes/osx-arm64/native/include/mono-2.0",
+				);
+				"HEADER_SEARCH_PATHS[arch=x86_64]" = (
+					"$(SDKROOT)/usr/include/libxml2",
+					"$(PROJECT_DIR)/downloaded-frameworks/mono/runtimes/osx-x64/native/include/mono-2.0",
 				);
 				INFOPLIST_FILE = HSTrackerTests/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (
@@ -6953,7 +7117,7 @@
 				LIBRARY_SEARCH_PATHS = "$(PROJECT_DIR)/downloaded-frameworks/mono/runtimes/osx-x64/native";
 				MACOSX_DEPLOYMENT_TARGET = 11.0;
 				OTHER_SWIFT_FLAGS = "-DHSTTEST";
-				PRODUCT_BUNDLE_IDENTIFIER = net.hearthsim.hstracker.HSTrackerTests;
+				PRODUCT_BUNDLE_IDENTIFIER = "io.github.serge-ml.hstrackerarena.tests";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_OBJC_BRIDGING_HEADER = "HSTrackerTests/HSTracker-Test-Bridging-Header.h";
 				SWIFT_SWIFT3_OBJC_INFERENCE = Default;
@@ -7098,14 +7262,6 @@
 				minimumVersion = 5.1.1;
 			};
 		};
-		B8D75BF525BE032500446923 /* XCRemoteSwiftPackageReference "Sparkle" */ = {
-			isa = XCRemoteSwiftPackageReference;
-			repositoryURL = "https://github.com/sparkle-project/Sparkle";
-			requirement = {
-				kind = upToNextMajorVersion;
-				minimumVersion = 2.6.4;
-			};
-		};
 		B8E1E5A12CF94F2A00383975 /* XCRemoteSwiftPackageReference "AppMover" */ = {
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/iamcalledrob/AppMover";
@@ -7226,11 +7382,6 @@
 			isa = XCSwiftPackageProductDependency;
 			package = B8D75BED25BDFE6D00446923 /* XCRemoteSwiftPackageReference "GzipSwift" */;
 			productName = Gzip;
-		};
-		B8D75BF625BE032500446923 /* Sparkle */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = B8D75BF525BE032500446923 /* XCRemoteSwiftPackageReference "Sparkle" */;
-			productName = Sparkle;
 		};
 		B8E1E5A22CF94FB900383975 /* AppMover */ = {
 			isa = XCSwiftPackageProductDependency;

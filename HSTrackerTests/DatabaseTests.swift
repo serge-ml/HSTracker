@@ -76,6 +76,28 @@ class DatabaseTests: HSTrackerTests {
         XCTAssertEqual(card.type, CardType.hero, "Uncollectible Baron Geddon hero")
     }
 
+    func testLocalizedDatabaseAlsoLoadsEnglishCardNames() {
+        let localizedDatabase = Database()
+        localizedDatabase.loadDatabase(
+            splashscreen: nil,
+            withLanguages: [.ruRU, .enUS]
+        )
+        defer {
+            Database().loadDatabase(
+                splashscreen: nil,
+                withLanguages: [.enUS]
+            )
+        }
+
+        guard let card = Cards.any(byId: "CORE_KAR_057") else {
+            XCTFail("Ivory Knight is nil")
+            return
+        }
+
+        XCTAssertEqual(card.name, "Белый конь")
+        XCTAssertEqual(card.englishName, "Ivory Knight")
+    }
+
     func testHeroSkins() {
         guard let alleria = Cards.hero(byId: "HERO_05a") else {
             XCTFail("Alleria is nil")

@@ -12,43 +12,27 @@
         </customObject>
         <customObject id="-1" userLabel="First Responder" customClass="FirstResponder"/>
         <customObject id="-3" userLabel="Application" customClass="NSObject"/>
-        <customObject id="Voe-Tx-rLC" customClass="AppDelegate" customModule="HSTracker" customModuleProvider="target">
-            <connections>
-                <outlet property="sparkleUpdater" destination="l75-pu-pNN" id="96J-T1-1YU"/>
-            </connections>
-        </customObject>
+        <customObject id="Voe-Tx-rLC" customClass="AppDelegate" customModule="HSTracker" customModuleProvider="target"/>
         <customObject id="YLy-65-1bz" customClass="NSFontManager"/>
-        <customObject id="l75-pu-pNN" customClass="SPUStandardUpdaterController">
-            <connections>
-                <outlet property="userDriverDelegate" destination="Voe-Tx-rLC" id="DK6-nK-khx"/>
-            </connections>
-        </customObject>
         <menu title="Main Menu" systemMenu="main" id="AYu-sK-qS6">
             <items>
-                <menuItem title="HSTracker" id="1Xt-HY-uBw">
+                <menuItem title="HSTracker Arena" id="1Xt-HY-uBw">
                     <modifierMask key="keyEquivalentModifierMask"/>
-                    <menu key="submenu" title="HSTracker" systemMenu="apple" id="uQy-DD-JDr">
+                    <menu key="submenu" title="HSTracker Arena" systemMenu="apple" id="uQy-DD-JDr">
                         <items>
-                            <menuItem title="About HSTracker" id="5kV-Vb-QxS">
+                            <menuItem title="About HSTracker Arena" id="5kV-Vb-QxS">
                                 <modifierMask key="keyEquivalentModifierMask"/>
                                 <connections>
                                     <action selector="orderFrontStandardAboutPanel:" target="-1" id="Exp-CZ-Vem"/>
                                 </connections>
                             </menuItem>
-                            <menuItem title="Check for Updates..." id="4yc-yU-eH1">
-                                <modifierMask key="keyEquivalentModifierMask"/>
-                                <connections>
-                                    <action selector="checkForUpdates:" target="l75-pu-pNN" id="J4d-QU-XvA"/>
-                                </connections>
-                            </menuItem>
-                            <menuItem isSeparatorItem="YES" id="VOq-y0-SEH"/>
                             <menuItem title="Preferences…" keyEquivalent="," id="BOF-NM-1cW">
                                 <connections>
                                     <action selector="openPreferences:" target="Voe-Tx-rLC" id="9eU-pn-RdE"/>
                                 </connections>
                             </menuItem>
                             <menuItem isSeparatorItem="YES" id="4je-JR-u6R"/>
-                            <menuItem title="Hide HSTracker" keyEquivalent="h" id="Olw-nP-bQN">
+                            <menuItem title="Hide HSTracker Arena" keyEquivalent="h" id="Olw-nP-bQN">
                                 <connections>
                                     <action selector="hide:" target="-1" id="PnN-Uc-m68"/>
                                 </connections>
@@ -66,7 +50,7 @@
                                 </connections>
                             </menuItem>
                             <menuItem isSeparatorItem="YES" id="kCx-OE-vgT"/>
-                            <menuItem title="Quit HSTracker" keyEquivalent="q" id="4sb-4s-VLi">
+                            <menuItem title="Quit HSTracker Arena" keyEquivalent="q" id="4sb-4s-VLi">
                                 <connections>
                                     <action selector="terminate:" target="-1" id="Te7-pn-YzF"/>
                                 </connections>
@@ -207,7 +191,7 @@
                                     <action selector="bugReport:" target="-1" id="xOU-AY-SgR"/>
                                 </connections>
                             </menuItem>
-                            <menuItem title="HSTracker Help" keyEquivalent="?" id="FKE-Sm-Kum">
+                            <menuItem title="HSTracker Arena Help" keyEquivalent="?" id="FKE-Sm-Kum">
                                 <connections>
                                     <action selector="showHelp:" target="-1" id="y7X-2Q-9no"/>
                                 </connections>

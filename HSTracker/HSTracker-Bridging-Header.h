@@ -9,8 +9,6 @@
 #ifndef HSTracker_Bridging_Header_h
 #define HSTracker_Bridging_Header_h
 
-#import <Sparkle/Sparkle.h>
-
 #import "GlowFilter.h"
 
 #import <HearthMirror/HearthMirror.h>
