@@ -49,6 +49,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSUserNotificationCenterDele
             BattlegroundsPreferences(nibName: "BattlegroundsPreferences", bundle: nil),
             MercenariesPreferences(nibName: "MercenariesPreferences", bundle: nil),
             HearthArenaPreferencesController(),
+            UpdatePreferencesController(),
             ImportingPreferences(nibName: "ImportingPreferences", bundle: nil)
         ]
         // Each pane fixes its own width (see PreferencePaneController), so the window keeps a
@@ -193,6 +194,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSUserNotificationCenterDele
         file.logFileAmount = 2
         logger.addDestination(file)
         logger.info("*** Starting \(Version.buildName) ***")
+        UpdateController.shared.start()
         
         HSReplayNetHelper.initialize()
         
@@ -601,6 +603,10 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSUserNotificationCenterDele
     
     @IBAction func openPreferences(_ sender: AnyObject) {
         preferences.show()
+    }
+
+    @IBAction func checkForUpdates(_ sender: Any?) {
+        UpdateController.shared.checkForUpdates(sender)
     }
     
     func openPreferences(pane: Preferences.PaneIdentifier) {

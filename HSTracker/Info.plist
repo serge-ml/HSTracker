@@ -72,5 +72,19 @@
 	<array>
 		<string>allowed</string>
 	</array>
+	<key>SUAllowsAutomaticUpdates</key>
+	<true/>
+	<key>SUAutomaticallyUpdate</key>
+	<false/>
+	<key>SUEnableAutomaticChecks</key>
+	<false/>
+	<key>SUEnableSystemProfiling</key>
+	<false/>
+	<key>SUFeedURL</key>
+	<string>https://serge-ml.github.io/HSTracker/appcast.xml</string>
+	<key>SUPublicEDKey</key>
+	<string>7l1tt2vHbSr03uOge75vssUgsmcVN56u12/NffbvbAw=</string>
+	<key>SUScheduledCheckInterval</key>
+	<integer>86400</integer>
 </dict>
 </plist>

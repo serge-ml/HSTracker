@@ -23,20 +23,7 @@ jobs:
 
       - name: Verify fork identity and updater isolation
         run: |
-          if grep -q "hsdecktracker.net/hstracker/appcast" HSTracker/Info.plist; then
-            echo "Official HSTracker Sparkle feed must not be present"
-            exit 1
-          fi
-          if grep -q "Sparkle" \
-            HSTracker.xcodeproj/project.pbxproj \
-            HSTracker.xcodeproj/project.xcworkspace/xcshareddata/swiftpm/Package.resolved \
-            HSTracker/Info.plist \
-            HSTracker/UIs/Base.lproj/MainMenu.xib \
-            HSTracker/HSTracker-Bridging-Header.h \
-            HSTrackerTests/HSTracker-Test-Bridging-Header.h; then
-            echo "Sparkle must not be linked or configured in the personal MVP"
-            exit 1
-          fi
+          ./scripts/verify_fork_update_identity.sh
           test ! -e HSTracker/Resources/dsa_pub.pem
           if grep -q \
             -e "da39869dcbc77a77a53506f12ff08094" \
@@ -88,6 +75,7 @@ jobs:
           xmllint --noout HSTracker/UIs/Base.lproj/MainMenu.xib
           bash -n scripts/cards_download.sh
           bash -n scripts/hstracker_arena_app.sh
+          bash -n scripts/verify_fork_update_identity.sh
 
   app:
     if: github.event_name != 'schedule'
