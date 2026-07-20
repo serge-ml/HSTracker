@@ -99,6 +99,7 @@ jobs:
         run: |
           xcodebuild -resolvePackageDependencies \
             -project HSTracker.xcodeproj \
+            -scheme HSTracker \
             -derivedDataPath "$RUNNER_TEMP/DerivedData"
 
       - name: Build unsigned Debug and Release apps
