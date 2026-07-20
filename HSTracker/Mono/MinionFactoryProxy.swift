@@ -14,7 +14,6 @@ class MinionFactoryProxy: MonoHandle, MonoClassInitializer {
     private static var _classVT: OpaquePointer?
     
     private static var _createFromCardid: OpaquePointer!
-    private static var _cardIdsWithoutPremiumImplementations: OpaquePointer?
     private static var _cardIdsWithCleave: OpaquePointer?
     private static var _cardIdsWithMegaWindfury: OpaquePointer?
     private static var _tryGetPremiumIdFromNormal: OpaquePointer!
@@ -28,18 +27,6 @@ class MinionFactoryProxy: MonoHandle, MonoClassInitializer {
         
         _createFromCardid = MonoHelper.getMethod(MinionFactoryProxy._class, "CreateFromCardId", 2)
         
-        // BobsBuddy 1.44.9 removed this compatibility set. An empty set has
-        // the same meaning once every supported minion has a premium
-        // implementation, and keeps newer managed assemblies launchable.
-        _cardIdsWithoutPremiumImplementations = mono_class_get_field_from_name(
-            _class,
-            "cardIdsWithoutPremiumImplementations"
-        )
-        if _cardIdsWithoutPremiumImplementations == nil {
-            logger.warning(
-                "BobsBuddy does not expose cardIdsWithoutPremiumImplementations; using an empty compatibility set"
-            )
-        }
         _cardIdsWithCleave = MonoHelper.getField(_class, "cardIDsWithCleave")
         _cardIdsWithMegaWindfury = MonoHelper.getField(_class, "cardIdsWithMegaWindfury")
         
@@ -107,10 +94,6 @@ class MinionFactoryProxy: MonoHandle, MonoClassInitializer {
         return arr
     }
     
-    static func getCardIdsWithoutPremiumImplementations() -> [String] {
-        return getStringArrayField(field: _cardIdsWithoutPremiumImplementations)
-    }
-
     static func getCardIdsWithCleave() -> [String] {
         return getStringArrayField(field: _cardIdsWithCleave)
     }
