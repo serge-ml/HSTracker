@@ -149,8 +149,8 @@ HSTracker Arena и актуальные workflow.
 - обязательный Pull Request перед слиянием;
 - обязательные проверки из `HSTracker Arena CI`;
 - разрешение auto-merge;
-- Actions permissions: `Read and write permissions`;
-- разрешение GitHub Actions создавать и одобрять Pull Requests;
+- default Actions permissions: `Read repository contents and packages`;
+- запрет GitHub Actions одобрять Pull Requests;
 - GitHub Environment `release` для release-секретов.
 
 Добавить `CODEOWNERS` минимум для:
@@ -187,24 +187,18 @@ pipeline от случайных или опасных upstream-изменени
 9. закрывать устаревшие sync-PR только после появления корректного нового PR;
 10. не выпускать релиз непосредственно из sync workflow.
 
-Особенность GitHub Actions: `pull_request`, порождённый встроенным
-`GITHUB_TOKEN`, создаёт CI run, требующий ручного разрешения. В этом личном
-форке выбран вариант без постоянного PAT: sync workflow создаёт ветку и PR
-короткоживущим `GITHUB_TOKEN`, затем явно запускает CI через
-`workflow_dispatch`. Для `workflow_dispatch` GitHub всегда создаёт отдельный
-run на точном SHA sync-ветки; auto-merge остаётся заблокирован обязательными
-checks `core` и `app`, пока они не завершатся успешно.
+Особенность GitHub Actions: в публичном fork встроенный `GITHUB_TOKEN`
+ограничен read-only и не может создать sync-ветку, PR или Issue. Поэтому для
+sync используется один fine-grained `UPSTREAM_SYNC_TOKEN`, ограниченный только
+этим репозиторием и правами `Contents: write`, `Issues: write` и
+`Pull requests: write`. Созданный этим токеном PR запускает обычный
+`pull_request` CI; auto-merge остаётся заблокирован обязательными checks `core`
+и `app`, пока они не завершатся успешно.
 
-Прямой merge официальной истории через встроенный токен невозможен, если в
-этой истории менялись `.github/workflows`: GitHub требует отдельное
-долгоживущее credential с `workflows`-доступом. Поэтому sync переносит
-incremental diff одним аудируемым commit, исключает официальные workflow-файлы
-и оставляет delivery pipeline во владении форка. Новый upstream SHA записывается
-в marker только в том же PR, который содержит соответствующие изменения.
-
-Права `Actions: write`, `Contents: write`, `Issues: write` и
-`Pull requests: write` выдаются встроенному токену только для sync job.
-Постоянный `UPSTREAM_SYNC_TOKEN` не требуется.
+Sync переносит incremental diff одним аудируемым commit, исключает официальные
+workflow-файлы и оставляет delivery pipeline во владении форка. Поэтому токену
+не нужны права `Workflows` или `Actions`. Новый upstream SHA записывается в
+marker только в том же PR, который содержит соответствующие изменения.
 
 Критерий готовности: тестовый безопасный upstream commit автоматически проходит
 путь от обнаружения до merge; сломанная тестовая ветка не сливается.
@@ -312,9 +306,15 @@ Release job с секретами не должен запускать прои�
 
 ### Этап 6. Настроить секреты
 
-Для sync постоянные secrets не нужны: workflow использует короткоживущий
-встроенный `GITHUB_TOKEN` и явно запускает required CI через
-`workflow_dispatch`.
+Для sync:
+
+| Secret | Назначение |
+|---|---|
+| `UPSTREAM_SYNC_TOKEN` | Создание sync-ветки, PR, labels и conflict Issue |
+
+Это fine-grained token с доступом только к `serge-ml/HSTracker` и правами
+`Contents`, `Issues`, `Pull requests`: read/write. Права `Actions`,
+`Workflows` и доступ к другим репозиториям не нужны.
 
 Для Sparkle:
 
