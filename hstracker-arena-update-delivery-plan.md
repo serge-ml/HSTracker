@@ -177,9 +177,10 @@ pipeline от случайных или опасных upstream-изменени
 
 1. запускать sync ежедневно и вручную через `workflow_dispatch`;
 2. получать `upstream/master` с полной историей;
-3. ничего не делать, если основная ветка уже содержит upstream commit;
+3. хранить последний интегрированный upstream SHA в
+   `.github/upstream-base.sha` и ничего не делать, если он уже актуален;
 4. создавать уникальную ветку `sync/hstracker-<upstream-sha>-<base-sha>`;
-5. выполнять обычный merge upstream в sync-ветку;
+5. применять incremental diff от записанного SHA до нового upstream SHA;
 6. создавать один PR и ставить labels `upstream-sync` и `automerge`;
 7. включать auto-merge командой `gh pr merge --auto --merge`;
 8. при конфликте создавать/обновлять Issue с SHA и ссылкой на run;
@@ -193,6 +194,13 @@ pipeline от случайных или опасных upstream-изменени
 `workflow_dispatch`. Для `workflow_dispatch` GitHub всегда создаёт отдельный
 run на точном SHA sync-ветки; auto-merge остаётся заблокирован обязательными
 checks `core` и `app`, пока они не завершатся успешно.
+
+Прямой merge официальной истории через встроенный токен невозможен, если в
+этой истории менялись `.github/workflows`: GitHub требует отдельное
+долгоживущее credential с `workflows`-доступом. Поэтому sync переносит
+incremental diff одним аудируемым commit, исключает официальные workflow-файлы
+и оставляет delivery pipeline во владении форка. Новый upstream SHA записывается
+в marker только в том же PR, который содержит соответствующие изменения.
 
 Права `Actions: write`, `Contents: write`, `Issues: write` и
 `Pull requests: write` выдаются встроенному токену только для sync job.

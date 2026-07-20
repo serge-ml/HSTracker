@@ -237,20 +237,31 @@ The official repository is configured as a fetch-only `upstream` remote:
 ```bash
 git fetch upstream
 git switch -c sync/hstracker-<version>
-git merge upstream/master
+base="$(tr -d '[:space:]' < .github/upstream-base.sha)"
+target="$(git rev-parse 'upstream/master^{commit}')"
+git diff --binary --full-index --find-renames \
+  "$base" "$target" \
+  -- . ':(exclude).github/workflows/**' \
+  ':(exclude).github/upstream-base.sha' \
+  | git apply --3way --index -
 ```
 
-Resolve conflicts only in the sync branch, then build, run tests, and smoke-test
-both normal tracking and an Arena draft before merging.
+Resolve conflicts only in the sync branch, set `.github/upstream-base.sha` to
+`$target`, and commit the marker together with the resolved changes. Then
+build, run tests, and smoke-test both normal tracking and an Arena draft before
+merging.
 
-The daily `HSTracker upstream sync` workflow fast-forwards the clean
-`upstream-sync` audit branch and opens a unique review PR when official
-`master` advances. Safe PRs receive `upstream-sync` and `automerge` labels and
-are configured for auto-merge after required CI passes. Changes to workflows,
-project identity, entitlements, or scripts pause auto-merge for explicit
-CODEOWNER review. A merge conflict fails safely and creates or updates an Issue
-containing the upstream SHA, fork base SHA, conflicting files, and workflow
-run.
+The daily `HSTracker upstream sync` workflow compares official `master` with
+the last integrated SHA recorded in `.github/upstream-base.sha`, applies only
+that incremental diff, and opens a unique review PR. The marker advances in the
+same commit as the imported changes. Official `.github/workflows` files are
+excluded because the fork owns its delivery pipeline; excluded paths are
+listed in the PR. Safe PRs receive `upstream-sync` and `automerge` labels and
+are configured for auto-merge after required CI passes. Changes to project
+identity, entitlements, or scripts pause auto-merge for explicit CODEOWNER
+review. A patch conflict fails safely and creates or updates an Issue
+containing the previous and new upstream SHAs, fork base SHA, conflicting
+files, and workflow run.
 
 The workflow uses only GitHub's short-lived built-in token. A pull request
 created by that token produces a CI run that requires manual approval, so the
@@ -302,8 +313,10 @@ those locations.
 - Release: allow the automatic post-CI run on the default branch, or run
   `HSTracker Arena Release` manually with the successful CI run ID.
 - Sync conflicts: inspect the `[automation] Upstream sync conflict` Issue and
-  its linked workflow run. Resolve in a new review branch; never force the
-  default branch to the upstream SHA.
+  its linked workflow run. Resolve the incremental diff in a new review branch,
+  update `.github/upstream-base.sha` to the exact upstream SHA in the same
+  commit, and run required CI. Never force the default branch to the upstream
+  SHA.
 - Parser failures: inspect the `[automation] HearthArena parser health check
   failed` Issue. A stale valid local snapshot remains usable.
 - Release failures: inspect the `sign` job first, then `publish`. Signing
