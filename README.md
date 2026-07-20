@@ -16,14 +16,31 @@ requirement-by-requirement evidence and remaining gates are tracked in
   - macOS 10.14 or higher
   - Full Xcode for local development builds
   - For Windows support please look at [**Hearthstone Deck Tracker**](https://github.com/HearthSim/Hearthstone-Deck-Tracker/)
-- No HSTracker Arena binary release is published yet. Build this repository
-  with the commands in [HEARTHARENA.md](HEARTHARENA.md).
+- No proven HSTracker Arena binary release is published yet. Until the first
+  signed N → N+1 update test is complete, build this repository with the
+  commands in [HEARTHARENA.md](HEARTHARENA.md).
 - Do not use the official HSTracker download link when you expect the
   HearthArena overlay; the official application does not contain this fork's
   feature.
 - Move `HSTracker Arena.app` to your `Applications` directory.
 - Launch HSTracker Arena before Hearthstone.
 - Create a new deck from the Deck Manager or import it from a deckstring. HSTracker will also auto-detect the deck you play with.
+
+## Updates and automation
+
+The app contains pinned Sparkle 2.9.2 and checks only the fork-owned signed
+feed at `https://serge-ml.github.io/HSTracker/appcast.xml`. Automatic checks are
+off by default; use `Check for Updates…` or Preferences → Updates.
+
+Pull requests and default-branch pushes run full core tests plus unsigned Debug
+and Release builds. A successful default-branch CI artifact can then enter the
+protected release workflow for signing, optional notarization, GitHub Release
+publication, and atomic appcast publication. Upstream HSTracker changes arrive
+through review PRs and cannot bypass required checks.
+
+Repository setup, secret scopes, manual workflow controls, rollback, key
+rotation, signature checks, and the required two-version acceptance test are
+documented in [HEARTHARENA.md](HEARTHARENA.md#delivery-operations).
 
 
 ## Community & Troubleshooting

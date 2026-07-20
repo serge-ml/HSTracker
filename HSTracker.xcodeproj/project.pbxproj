@@ -7,6 +7,8 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		C0D4C0010000000000000001 /* UpdateController.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0D4B0010000000000000001 /* UpdateController.swift */; };
+		C0D4C0010000000000000002 /* UpdatePreferencesController.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0D4B0010000000000000002 /* UpdatePreferencesController.swift */; };
 		1C132F821DBA24C1002B1BF2 /* AppHealth.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1C132F811DBA24C1002B1BF2 /* AppHealth.swift */; };
 		1C17D24C1E82C81700ED4047 /* LogEventParser.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1C17D24B1E82C81700ED4047 /* LogEventParser.swift */; };
 		1C17D2521E82DEE700ED4047 /* RealmHelper.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1C17D2511E82DEE700ED4047 /* RealmHelper.swift */; };
@@ -1307,6 +1309,7 @@
 		B8D75BEC25BDFA2500446923 /* RealmSwift in Frameworks */ = {isa = PBXBuildFile; productRef = B8D75BEB25BDFA2500446923 /* RealmSwift */; };
 		B8D75BEF25BDFE6D00446923 /* Gzip in Frameworks */ = {isa = PBXBuildFile; productRef = B8D75BEE25BDFE6D00446923 /* Gzip */; };
 		B8D75BF125BDFEDE00446923 /* Gzip in Frameworks */ = {isa = PBXBuildFile; productRef = B8D75BF025BDFEDE00446923 /* Gzip */; };
+		B8D75BF725BE032500446923 /* Sparkle in Frameworks */ = {isa = PBXBuildFile; productRef = B8D75BF625BE032500446923 /* Sparkle */; };
 		B8D8859224F3034700F2F0F2 /* StatusMessageConverter.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8D8859124F3034700F2F0F2 /* StatusMessageConverter.swift */; };
 		B8D8859824F40D4E00F2F0F2 /* ClickableBox.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8D8859724F40D4E00F2F0F2 /* ClickableBox.swift */; };
 		B8D8859A24F4185200F2F0F2 /* BobsBuddyErrorState.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8D8859924F4185200F2F0F2 /* BobsBuddyErrorState.swift */; };
@@ -1546,6 +1549,8 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		C0D4B0010000000000000001 /* UpdateController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UpdateController.swift; sourceTree = "<group>"; };
+		C0D4B0010000000000000002 /* UpdatePreferencesController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UpdatePreferencesController.swift; sourceTree = "<group>"; };
 		1C132F811DBA24C1002B1BF2 /* AppHealth.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = AppHealth.swift; sourceTree = "<group>"; };
 		1C17D24B1E82C81700ED4047 /* LogEventParser.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = LogEventParser.swift; sourceTree = "<group>"; };
 		1C17D2511E82DEE700ED4047 /* RealmHelper.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = RealmHelper.swift; sourceTree = "<group>"; };
@@ -2753,6 +2758,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				B882CC902FBBE364002234D6 /* libcoreclr.dylib in Frameworks */,
+				B8D75BF725BE032500446923 /* Sparkle in Frameworks */,
 				B8D75BBD25BCEACB00446923 /* TextAttributes in Frameworks */,
 				4367899F1CAC05DD00C962D1 /* Cocoa.framework in Frameworks */,
 				B8D75BD925BDD47A00446923 /* FMDB in Frameworks */,
@@ -2797,6 +2803,15 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		C0D4A0000000000000000001 /* Updater */ = {
+			isa = PBXGroup;
+			children = (
+				C0D4B0010000000000000001 /* UpdateController.swift */,
+				C0D4B0010000000000000002 /* UpdatePreferencesController.swift */,
+			);
+			path = Updater;
+			sourceTree = "<group>";
+		};
 		C0D3A0000000000000000001 /* HearthArenaOverlay */ = {
 			isa = PBXGroup;
 			children = (
@@ -3119,6 +3134,7 @@
 				43873CBF1CA6E68D00F01CB4 /* Debug */,
 				4323C5E31E1695DD00C97896 /* HearthMirror */,
 				C0D3A0000000000000000001 /* HearthArenaOverlay */,
+				C0D4A0000000000000000001 /* Updater */,
 				B82AE5FB28BE8631004A8FE0 /* HearthMirror-version.txt */,
 				43B695551C90653A00F4D0AC /* Hearthstone */,
 				B854622B2CE007A90083BB31 /* HearthWatcher */,
@@ -4813,6 +4829,7 @@
 				B8D75BD825BDD47A00446923 /* FMDB */,
 				B8D75BE925BDF92B00446923 /* RealmSwift */,
 				B8D75BEE25BDFE6D00446923 /* Gzip */,
+				B8D75BF625BE032500446923 /* Sparkle */,
 				B82E7B18262A88DB00C42EF0 /* BigInt */,
 				B85920952B4C73B300B907A4 /* CustomToolTip */,
 				B8196F102CC1BB58007C0371 /* Sentry */,
@@ -4913,6 +4930,7 @@
 				B8D75BD725BDD47A00446923 /* XCRemoteSwiftPackageReference "fmdb" */,
 				B8D75BE825BDF92B00446923 /* XCRemoteSwiftPackageReference "realm-cocoa" */,
 				B8D75BED25BDFE6D00446923 /* XCRemoteSwiftPackageReference "GzipSwift" */,
+				B8D75BF525BE032500446923 /* XCRemoteSwiftPackageReference "Sparkle" */,
 				B82E7B17262A88DB00C42EF0 /* XCRemoteSwiftPackageReference "BigInt" */,
 				B85920942B4C73B300B907A4 /* XCRemoteSwiftPackageReference "CustomToolTip" */,
 				B8196F0F2CC1BB58007C0371 /* XCRemoteSwiftPackageReference "sentry-cocoa" */,
@@ -5213,6 +5231,8 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				C0D4C0010000000000000001 /* UpdateController.swift in Sources */,
+				C0D4C0010000000000000002 /* UpdatePreferencesController.swift in Sources */,
 				C0D3C0010000000000000001 /* ArenaOffer.swift in Sources */,
 				C0D3C0010000000000000002 /* TierRating.swift in Sources */,
 				C0D3C0010000000000000003 /* ArenaRatedCard.swift in Sources */,
@@ -7262,6 +7282,14 @@
 				minimumVersion = 5.1.1;
 			};
 		};
+		B8D75BF525BE032500446923 /* XCRemoteSwiftPackageReference "Sparkle" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/sparkle-project/Sparkle";
+			requirement = {
+				kind = exactVersion;
+				version = 2.9.2;
+			};
+		};
 		B8E1E5A12CF94F2A00383975 /* XCRemoteSwiftPackageReference "AppMover" */ = {
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/iamcalledrob/AppMover";
@@ -7382,6 +7410,11 @@
 			isa = XCSwiftPackageProductDependency;
 			package = B8D75BED25BDFE6D00446923 /* XCRemoteSwiftPackageReference "GzipSwift" */;
 			productName = Gzip;
+		};
+		B8D75BF625BE032500446923 /* Sparkle */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = B8D75BF525BE032500446923 /* XCRemoteSwiftPackageReference "Sparkle" */;
+			productName = Sparkle;
 		};
 		B8E1E5A22CF94FB900383975 /* AppMover */ = {
 			isa = XCSwiftPackageProductDependency;

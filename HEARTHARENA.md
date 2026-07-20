@@ -47,9 +47,17 @@ is calculated; no average or other misleading aggregate is displayed.
   client callback. Do not run the official app and the fork together while
   signing in to HSReplay.
 - Fork revision: `ha.1` on top of upstream `3.6.1`
-- The official HearthSim Sparkle feed, public keys, menu controller, and linked
-  Sparkle product are removed. Reintroduce Sparkle only with the fork's own
-  signed appcast.
+- Sparkle `2.9.2` is pinned through Swift Package Manager and linked only to
+  the HSTracker Arena app target.
+- The updater uses only
+  `https://serge-ml.github.io/HSTracker/appcast.xml` and the fork-owned EdDSA
+  public key embedded in `Info.plist`. The official HearthSim feed and public
+  key are rejected by CI.
+- Automatic checks are off by default. The app menu contains
+  `Check for Updates…`, and the Updates preferences pane controls automatic
+  checks and downloads using Sparkle's own persisted settings.
+- The private Sparkle key is not stored in this repository. Updater logs contain
+  state and ordinary errors, never signing material or credentials.
 - HearthSim's Sentry DSN and Mixpanel project token are not used. Retained
   upstream Mixpanel calls use an opted-out local-only instance, and Sentry is
   not started until the fork has its own endpoint.
@@ -93,6 +101,16 @@ checkout because it omits hundreds of application source files. CI therefore
 runs `swift test`, then builds the complete unsigned app in both
 configurations. Build-time downloads use the macOS-provided `curl`; `wget` is
 not required.
+
+The fork updater boundary can be checked independently:
+
+```bash
+./scripts/verify_fork_update_identity.sh
+```
+
+This fails when the fork feed or public key differs from the release pipeline,
+when the official HearthSim updater identity reappears, or when a recognizable
+private-key file is tracked.
 
 ## Local delivery to Applications
 
@@ -145,26 +163,30 @@ For Accessibility, add `/Applications/HSTracker Arena.app` in System Settings �
 Privacy & Security → Accessibility. Do not add an Xcode DerivedData copy; its
 path and signing identity are development implementation details.
 
-The intended public update path is separate from the local installer:
+The public update path is separate from the local installer:
 
-1. A version tag triggers a reproducible Release build in CI.
-2. CI signs the app with the fork's Developer ID identity, enables the hardened
-   runtime, notarizes it with Apple, and staples the notarization ticket.
-3. CI publishes the verified ZIP and checksum as a versioned GitHub release.
-4. The release job updates a fork-owned, signed Sparkle appcast.
-5. Existing installations download the ZIP through Sparkle, validate its
-   signature, replace the app in `/Applications`, and relaunch.
+1. `HSTracker Arena CI` tests a default-branch commit and uploads the unsigned
+   Release ZIP plus SHA-256 as a 14-day artifact.
+2. `HSTracker Arena Release` downloads that exact run's artifact by run ID and
+   commit SHA; it does not rebuild or execute repository scripts with secrets.
+3. The protected `release` job assigns a monotonic build number, verifies the
+   bundle, signs all nested code and the app, and optionally notarizes and
+   staples it.
+4. Pinned official Sparkle tools sign the ZIP and appcast with the fork key.
+5. A draft GitHub Release is verified before it becomes public. The release
+   asset is checked over HTTPS before `appcast.xml` is atomically pushed to
+   `gh-pages`.
+6. If publication or feed verification fails, the workflow re-drafts the
+   release and rolls back its appcast commit.
+7. Existing installations validate the EdDSA signature, replace the app in
+   `/Applications`, and relaunch.
 
-The repository does not enable that channel yet: Developer ID credentials,
-notarization credentials, fork-owned Sparkle keys, and a first versioned
-release are required. Until then, `hstracker_arena_app.sh install` is the
-canonical update path and exercises the same build → verify → replace →
-relaunch lifecycle locally.
-
-After the branch is pushed, the manual `HSTracker Arena personal build`
-workflow can produce an unsigned ZIP plus SHA-256 checksum as a 14-day Actions
-artifact. It does not create a release. macOS may require the usual local
-Gatekeeper override for an unsigned personal build.
+The first public release still requires repository settings, the protected
+environment, a Sparkle secret, and GitHub Pages. Without a Developer ID
+certificate the workflow deliberately produces an ad-hoc-signed test release;
+public distribution should use Developer ID and notarization. Until the first
+end-to-end release is proven, `hstracker_arena_app.sh install` remains the
+development and emergency path.
 
 The pure Swift core can be checked without Xcode:
 
@@ -240,6 +262,133 @@ branch, so PAT-authored pushes still trigger pull-request CI.
 The inherited `fastlane/` and `scripts/*release*` files still describe
 HearthSim's official release infrastructure. They are intentionally not wired
 to any workflow in this fork and must not be used for HSTracker Arena releases.
+
+## Delivery operations
+
+### One-time GitHub setup
+
+Protect the repository default branch and require the `core` and `app` jobs
+from `HSTracker Arena CI`. Require a pull request, dismiss stale approvals,
+require CODEOWNER review for protected delivery files, block force pushes, and
+allow auto-merge. The sync identity must be different from the owner when
+owner approval is required.
+
+Create a fine-grained `UPSTREAM_SYNC_TOKEN` repository secret with access only
+to this repository and:
+
+- Contents: read and write
+- Pull requests: read and write
+
+Create a GitHub Environment named `release`. Initially require owner approval
+before deployment. Add:
+
+| Secret | Required | Purpose |
+|---|---:|---|
+| `SPARKLE_ED_PRIVATE_KEY` | yes | Base64 Ed25519 seed exported by Sparkle `generate_keys` |
+| `DEVELOPER_ID_CERTIFICATE_BASE64` | for public releases | Developer ID Application `.p12` |
+| `DEVELOPER_ID_CERTIFICATE_PASSWORD` | with certificate | `.p12` password |
+| `TEMP_KEYCHAIN_PASSWORD` | with certificate | Ephemeral runner keychain |
+| `APPLE_ID` | for notarization | Apple developer account |
+| `APPLE_TEAM_ID` | for notarization | Apple team identifier |
+| `APPLE_APP_SPECIFIC_PASSWORD` | for notarization | Notary authentication |
+
+Configure GitHub Pages to serve the root of the `gh-pages` branch. That branch
+contains only `.nojekyll` and the signed `appcast.xml`; update ZIPs remain
+versioned GitHub Release assets.
+
+Never paste secrets into workflow inputs, Issues, PR comments, logs, release
+notes, or repository files. Rotate a token immediately if it appears in any of
+those locations.
+
+### Running and diagnosing automation
+
+- CI: Actions → `HSTracker Arena CI` → Run workflow.
+- Sync: Actions → `HSTracker upstream sync` → Run workflow.
+- Release: allow the automatic post-CI run on the default branch, or run
+  `HSTracker Arena Release` manually with the successful CI run ID.
+- Sync conflicts: inspect the `[automation] Upstream sync conflict` Issue and
+  its linked workflow run. Resolve in a new review branch; never force the
+  default branch to the upstream SHA.
+- Parser failures: inspect the `[automation] HearthArena parser health check
+  failed` Issue. A stale valid local snapshot remains usable.
+- Release failures: inspect the `sign` job first, then `publish`. Signing
+  secrets exist only in `sign`; the public `publish` job receives only verified
+  signed artifacts.
+
+A no-change sync exits successfully. A conflict, red required check, changed
+protected delivery file, missing secret, bad signature, failed notarization, or
+unreachable feed stops automatic delivery.
+
+### Disabling updates and revoking a release
+
+Users can clear `Automatically check for updates` in Preferences → Updates.
+To prevent all clients from seeing a newly bad release:
+
+1. re-draft the GitHub Release;
+2. revert the corresponding `gh-pages` appcast commit and push the revert;
+3. verify the public feed no longer names the revoked asset;
+4. publish a fixed build with a strictly higher `CFBundleVersion`.
+
+Do not reuse a tag, ZIP filename, build number, or signature. Keep the previous
+Release available for manual recovery. A user can download that earlier ZIP,
+quit the app, replace `/Applications/HSTracker Arena.app`, and relaunch. Local
+development installations can instead use:
+
+```bash
+./scripts/hstracker_arena_app.sh rollback
+```
+
+### Rotating credentials
+
+- Sync token: create the replacement first, update
+  `UPSTREAM_SYNC_TOKEN`, manually run sync, then revoke the old token.
+- Sparkle key: keep the old key long enough to publish a bridge release signed
+  by the old key whose app embeds the new public key. Only later sign new
+  archives with the new private key. Replacing the feed key without a bridge
+  strands installed clients.
+- Developer ID: export the renewed Developer ID Application identity as a
+  password-protected `.p12`, update all three certificate/keychain secrets, run
+  a protected test release, verify notarization, then remove the old export.
+- Apple notarization password: update the environment secret and run a manual
+  release from a fresh successful CI run.
+
+### Installed-app verification
+
+```bash
+app="/Applications/HSTracker Arena.app"
+codesign --verify --deep --strict --verbose=2 "$app"
+codesign -d -r- --verbose=2 "$app"
+spctl --assess --type execute --verbose=2 "$app"
+xcrun stapler validate "$app"
+/usr/libexec/PlistBuddy -c 'Print :CFBundleIdentifier' \
+  "$app/Contents/Info.plist"
+/usr/libexec/PlistBuddy -c 'Print :CFBundleShortVersionString' \
+  "$app/Contents/Info.plist"
+/usr/libexec/PlistBuddy -c 'Print :CFBundleVersion' \
+  "$app/Contents/Info.plist"
+```
+
+`spctl` and stapler validation are expected to succeed only for a Developer
+ID-notarized release. The bundle identifier must remain
+`io.github.serge-ml.hstrackerarena`.
+
+### N → N+1 acceptance
+
+Before removing manual approval from the `release` environment, prove two real
+releases:
+
+1. install N in `/Applications` and confirm it does not offer itself;
+2. publish N+1 through PR, required CI, and the release workflow;
+3. verify release notes, Sparkle download, signature validation, replacement,
+   relaunch, installed build number, tracking, Arena overlay, and a reboot;
+4. confirm Accessibility and Input Monitoring permissions remain effective;
+5. confirm a corrupted ZIP is rejected, an older build is not installed, an
+   unavailable feed does not prevent launch, a failed release leaves the old
+   appcast active, and an upstream conflict changes no installed version.
+
+Record the two tags, CI/release run IDs, appcast SHA-256, installed versions,
+signature output, and smoke-test results before considering public delivery
+complete.
 
 ## Manual Arena smoke test
 
