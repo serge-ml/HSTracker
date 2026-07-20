@@ -92,8 +92,6 @@ jobs:
   app:
     if: github.event_name != 'schedule'
     runs-on: macos-15
-    env:
-      DERIVED_DATA: ${{ runner.temp }}/DerivedData
     steps:
       - uses: actions/checkout@v4
 
@@ -101,7 +99,7 @@ jobs:
         run: |
           xcodebuild -resolvePackageDependencies \
             -project HSTracker.xcodeproj \
-            -derivedDataPath "$DERIVED_DATA"
+            -derivedDataPath "$RUNNER_TEMP/DerivedData"
 
       - name: Build unsigned Debug and Release apps
         run: |
@@ -110,7 +108,7 @@ jobs:
             -scheme HSTracker \
             -configuration Debug \
             -destination "platform=macOS" \
-            -derivedDataPath "$DERIVED_DATA" \
+            -derivedDataPath "$RUNNER_TEMP/DerivedData" \
             CODE_SIGNING_ALLOWED=NO
 
           xcodebuild build \
@@ -118,12 +116,12 @@ jobs:
             -scheme HSTracker \
             -configuration Release \
             -destination "platform=macOS" \
-            -derivedDataPath "$DERIVED_DATA" \
+            -derivedDataPath "$RUNNER_TEMP/DerivedData" \
             CODE_SIGNING_ALLOWED=NO
 
       - name: Package unsigned Release artifact and checksum
         run: |
-          app="$DERIVED_DATA/Build/Products/Release/HSTracker Arena.app"
+          app="$RUNNER_TEMP/DerivedData/Build/Products/Release/HSTracker Arena.app"
           artifact_dir="$RUNNER_TEMP/release-artifact"
           test -d "$app"
           mkdir -p "$artifact_dir"
