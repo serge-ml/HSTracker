@@ -1,0 +1,94 @@
+name: HSTracker upstream sync
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "41 4 * * 1"
+
+permissions:
+  contents: write
+  pull-requests: write
+
+concurrency:
+  group: upstream-sync
+  cancel-in-progress: false
+
+jobs:
+  prepare-sync-pr:
+    runs-on: macos-15
+    env:
+      GH_TOKEN: ${{ github.token }}
+      BASE_BRANCH: ${{ github.event.repository.default_branch }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          ref: ${{ github.event.repository.default_branch }}
+
+      - name: Fetch official HSTracker
+        run: |
+          git remote add upstream https://github.com/HearthSim/HSTracker.git
+          git fetch --prune upstream master
+
+      - name: Stop when the fork is current
+        id: status
+        run: |
+          if git merge-base --is-ancestor upstream/master HEAD; then
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Fast-forward clean upstream-sync branch
+        if: steps.status.outputs.changed == 'true'
+        run: |
+          git fetch origin upstream-sync:refs/remotes/origin/upstream-sync || true
+          if git show-ref --verify --quiet refs/remotes/origin/upstream-sync; then
+            git merge-base --is-ancestor origin/upstream-sync upstream/master
+          fi
+          git push origin upstream/master:refs/heads/upstream-sync
+
+      - name: Merge upstream into a review branch
+        if: steps.status.outputs.changed == 'true'
+        id: merge
+        run: |
+          short_sha="$(git rev-parse --short=10 upstream/master)"
+          base_sha="$(git rev-parse --short=8 HEAD)"
+          branch="sync/hstracker-$short_sha-$base_sha"
+          echo "branch=$branch" >> "$GITHUB_OUTPUT"
+          if git ls-remote --exit-code --heads origin "$branch"; then
+            echo "needs_push=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git switch -c "$branch"
+          git merge --no-edit upstream/master
+          echo "needs_push=true" >> "$GITHUB_OUTPUT"
+
+      - name: Push review branch
+        if: steps.status.outputs.changed == 'true' && steps.merge.outputs.needs_push == 'true'
+        run: |
+          git push --set-upstream origin "${{ steps.merge.outputs.branch }}"
+
+      - name: Open sync pull request
+        if: steps.status.outputs.changed == 'true'
+        run: |
+          branch="${{ steps.merge.outputs.branch }}"
+          existing_url="$(
+            gh pr list \
+              --base "$BASE_BRANCH" \
+              --head "$branch" \
+              --state open \
+              --json url \
+              --jq '.[0].url // empty'
+          )"
+          if [ -n "$existing_url" ]; then
+            echo "Existing PR: $existing_url"
+            exit 0
+          fi
+          gh pr create \
+            --base "$BASE_BRANCH" \
+            --head "$branch" \
+            --title "chore: sync official HSTracker upstream" \
+            --body "Automated upstream merge. Do not merge until CI passes and normal tracking plus Arena overlay have been smoke-tested."

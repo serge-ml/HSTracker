@@ -1,0 +1,48 @@
+name: HSTracker Arena personal build
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  unsigned-build:
+    runs-on: macos-15
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Resolve Swift packages
+        run: xcodebuild -resolvePackageDependencies -project HSTracker.xcodeproj
+
+      - name: Build unsigned Release app
+        run: |
+          xcodebuild build \
+            -project HSTracker.xcodeproj \
+            -scheme HSTracker \
+            -configuration Release \
+            -destination "platform=macOS" \
+            -derivedDataPath "$RUNNER_TEMP/DerivedData" \
+            CODE_SIGNING_ALLOWED=NO
+
+      - name: Package app and checksum
+        run: |
+          app="$RUNNER_TEMP/DerivedData/Build/Products/Release/HSTracker Arena.app"
+          test -d "$app"
+          ditto \
+            -c \
+            -k \
+            --keepParent \
+            "$app" \
+            "$RUNNER_TEMP/HSTracker-Arena-unsigned.zip"
+          cd "$RUNNER_TEMP"
+          shasum -a 256 HSTracker-Arena-unsigned.zip \
+            > HSTracker-Arena-unsigned.zip.sha256
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: HSTracker-Arena-unsigned
+          path: |
+            ${{ runner.temp }}/HSTracker-Arena-unsigned.zip
+            ${{ runner.temp }}/HSTracker-Arena-unsigned.zip.sha256
+          retention-days: 14

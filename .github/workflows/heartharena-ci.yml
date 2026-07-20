@@ -1,0 +1,181 @@
+name: HSTracker Arena CI
+
+on:
+  push:
+    branches:
+      - master
+      - main
+      - "codex/**"
+  pull_request:
+  workflow_dispatch:
+  schedule:
+    - cron: "17 3 * * *"
+
+permissions:
+  contents: read
+
+jobs:
+  core:
+    runs-on: macos-15
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Verify fork identity and updater isolation
+        run: |
+          if grep -q "hsdecktracker.net/hstracker/appcast" HSTracker/Info.plist; then
+            echo "Official HSTracker Sparkle feed must not be present"
+            exit 1
+          fi
+          if grep -q "Sparkle" \
+            HSTracker.xcodeproj/project.pbxproj \
+            HSTracker.xcodeproj/project.xcworkspace/xcshareddata/swiftpm/Package.resolved \
+            HSTracker/Info.plist \
+            HSTracker/UIs/Base.lproj/MainMenu.xib \
+            HSTracker/HSTracker-Bridging-Header.h \
+            HSTrackerTests/HSTracker-Test-Bridging-Header.h; then
+            echo "Sparkle must not be linked or configured in the personal MVP"
+            exit 1
+          fi
+          test ! -e HSTracker/Resources/dsa_pub.pem
+          if grep -q \
+            -e "da39869dcbc77a77a53506f12ff08094" \
+            -e "o35918.ingest.us.sentry.io/92505" \
+            HSTracker/AppDelegate.swift; then
+            echo "Official HearthSim telemetry endpoints must not be configured"
+            exit 1
+          fi
+          grep -q "io.github.serge-ml.hstrackerarena" HSTracker.xcodeproj/project.pbxproj
+          test "$(grep -c 'PRODUCT_MODULE_NAME = HSTracker' HSTracker.xcodeproj/project.pbxproj)" -eq 2
+          grep -q "hstracker-arena" HSTracker/Info.plist
+          grep -q "hstracker://oauth-callback/hsreplay" \
+            HSTracker/HSReplay/HSReplayAPI.swift
+          grep -q "ha.1" HSTracker/Info.plist
+
+      - name: Compile and run HearthArena core smoke tests
+        run: |
+          xcrun swiftc \
+            HSTracker/HearthArenaOverlay/Domain/*.swift \
+            HSTracker/HearthArenaOverlay/Data/*.swift \
+            HSTracker/HearthArenaOverlay/Diagnostics/*.swift \
+            scripts/heartharena_core_smoke.swift \
+            -o "$RUNNER_TEMP/heartharena-core-smoke"
+          "$RUNNER_TEMP/heartharena-core-smoke" \
+            HSTrackerTests/HearthArenaOverlay/Fixtures/heartharena-tierlist-sample.html
+
+          xcrun swiftc \
+            HSTracker/HearthArenaOverlay/UI/ArenaOverlayLayout.swift \
+            scripts/heartharena_layout_smoke.swift \
+            -o "$RUNNER_TEMP/heartharena-layout-smoke"
+          "$RUNNER_TEMP/heartharena-layout-smoke"
+
+          xcrun swiftc \
+            HSTracker/HearthArenaOverlay/Domain/ArenaOffer.swift \
+            HSTracker/HearthArenaOverlay/Domain/TierRating.swift \
+            HSTracker/HearthArenaOverlay/Integration/ArenaChoiceAdapter.swift \
+            scripts/heartharena_adapter_smoke.swift \
+            -o "$RUNNER_TEMP/heartharena-adapter-smoke"
+          "$RUNNER_TEMP/heartharena-adapter-smoke"
+
+      - name: Run HearthArena core XCTest suite
+        run: swift test
+
+      - name: Validate Xcode project and plist
+        run: |
+          plutil -lint HSTracker.xcodeproj/project.pbxproj
+          plutil -lint HSTracker/Info.plist
+
+  app:
+    if: github.event_name != 'schedule'
+    runs-on: macos-15
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Resolve Swift packages
+        run: xcodebuild -resolvePackageDependencies -project HSTracker.xcodeproj
+
+      - name: Build unsigned Debug and Release apps
+        run: |
+          xcodebuild build \
+            -project HSTracker.xcodeproj \
+            -scheme HSTracker \
+            -configuration Debug \
+            -destination "platform=macOS" \
+            CODE_SIGNING_ALLOWED=NO
+
+          xcodebuild build \
+            -project HSTracker.xcodeproj \
+            -scheme HSTracker \
+            -configuration Release \
+            -destination "platform=macOS" \
+            CODE_SIGNING_ALLOWED=NO
+
+  parser-health:
+    if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
+    runs-on: macos-15
+    permissions:
+      contents: read
+      issues: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Download current public tier list
+        run: |
+          curl \
+            --fail \
+            --location \
+            --compressed \
+            --retry 3 \
+            --user-agent "HSTracker Arena parser health check" \
+            --output "$RUNNER_TEMP/heartharena-tierlist.html" \
+            https://www.heartharena.com/tierlist
+          curl \
+            --fail \
+            --location \
+            --compressed \
+            --retry 3 \
+            --user-agent "HSTracker Arena mapping health check" \
+            --output "$RUNNER_TEMP/cards.json" \
+            https://api.hearthstonejson.com/v1/latest/enUS/cards.json
+
+      - name: Parse and validate current page
+        run: |
+          xcrun swiftc \
+            HSTracker/HearthArenaOverlay/Domain/TierRating.swift \
+            HSTracker/HearthArenaOverlay/Data/HearthArenaTextNormalizer.swift \
+            HSTracker/HearthArenaOverlay/Data/HearthArenaHTMLParser.swift \
+            HSTracker/HearthArenaOverlay/Data/TierListValidator.swift \
+            scripts/heartharena_parser_smoke.swift \
+            -o "$RUNNER_TEMP/heartharena-parser-smoke"
+          "$RUNNER_TEMP/heartharena-parser-smoke" \
+            "$RUNNER_TEMP/heartharena-tierlist.html"
+
+          xcrun swiftc \
+            HSTracker/HearthArenaOverlay/Domain/TierRating.swift \
+            HSTracker/HearthArenaOverlay/Data/HearthArenaTextNormalizer.swift \
+            HSTracker/HearthArenaOverlay/Data/HearthArenaHTMLParser.swift \
+            scripts/heartharena_mapping_smoke.swift \
+            -o "$RUNNER_TEMP/heartharena-mapping-smoke"
+          "$RUNNER_TEMP/heartharena-mapping-smoke" \
+            "$RUNNER_TEMP/heartharena-tierlist.html" \
+            "$RUNNER_TEMP/cards.json"
+
+      - name: Open or update parser health issue
+        if: failure()
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          title="[automation] HearthArena parser health check failed"
+          run_url="${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+          issue_number="$(
+            gh issue list \
+              --state open \
+              --search "$title in:title" \
+              --json number \
+              --jq '.[0].number // empty'
+          )"
+          body="The scheduled live parser check failed. Inspect the workflow run before changing or publishing cached data: $run_url"
+          if [ -n "$issue_number" ]; then
+            gh issue comment "$issue_number" --body "$body"
+          else
+            gh issue create --title "$title" --body "$body"
+          fi
