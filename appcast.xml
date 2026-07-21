@@ -5,21 +5,21 @@ IMPORTANT: This file was signed by Sparkle. Any modifications to this file requi
         <title>HSTracker Arena</title>
         <item>
             <title>3.6.1</title>
-            <pubDate>Tue, 21 Jul 2026 18:38:50 +0000</pubDate>
-            <link>https://github.com/serge-ml/HSTracker/releases/tag/arena-v3.6.1-b100030</link>
-            <sparkle:version>100030</sparkle:version>
+            <pubDate>Tue, 21 Jul 2026 20:24:05 +0000</pubDate>
+            <link>https://github.com/serge-ml/HSTracker/releases/tag/arena-v3.6.1-b100033</link>
+            <sparkle:version>100033</sparkle:version>
             <sparkle:shortVersionString>3.6.1</sparkle:shortVersionString>
             <sparkle:minimumSystemVersion>10.14</sparkle:minimumSystemVersion>
-            <description sparkle:format="markdown"><![CDATA[# HSTracker Arena 3.6.1 (100030)
+            <description sparkle:format="markdown"><![CDATA[# HSTracker Arena 3.6.1 (100033)
 
-- Source commit: `20593bb4c4b44fe6b7724a210d526911ca8baf4f`
-- CI run: 29837030162
+- Source commit: `cce61ee8db8dbd2602723a75ea952de9b9510962`
+- CI run: 29863440982
 - Update channel: HSTracker Arena fork
 ]]></description>
-            <enclosure url="https://github.com/serge-ml/HSTracker/releases/download/arena-v3.6.1-b100030/HSTracker-Arena-3.6.1-100030.zip" length="82738916" type="application/octet-stream" sparkle:edSignature="+o3TRdM6RKrsRKvMzU1PaTahJcuwYl1frO2MDWt0fLDcG84UCJlhpbD7tP9/7t5HorLXA1u1VdOCwuA3RWBVBg=="></enclosure>
+            <enclosure url="https://github.com/serge-ml/HSTracker/releases/download/arena-v3.6.1-b100033/HSTracker-Arena-3.6.1-100033.zip" length="82744910" type="application/octet-stream" sparkle:edSignature="HQMeqyQ0eNZPjs59AQae/wYXfkjxwkyNp7zb73/0Qa/4NTsJ4GbkMqP9PqdIjtZ/nDFE+DUhhXpAIls+Q4SrBA=="></enclosure>
         </item>
     </channel>
 </rss><!-- sparkle-signatures:
-edSignature: RQVvv89sgfr6buNwIrsXW1WUuVHwsBtROdKnMNIwkZi1PmErPsjQSOWiCfbBGfF/WqQeNuoOTs0Iy+Fc9y5nCg==
+edSignature: hZCrRDjv5TM61uKUeOguGRohXzznYX2xNWEes1nWdBAj3HyZDSx/Tp4nueV7v9n0TW3xXIJF5nehsxjY1m6dDw==
 length: 1414
 -->
