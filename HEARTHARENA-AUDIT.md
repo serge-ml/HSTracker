@@ -2,9 +2,8 @@
 
 Audit date: 2026-07-20
 
-This document maps the implementation to
-`hstracker-heartharena-development-plan.md`. It deliberately distinguishes
-source completion from runtime proof.
+This document records implementation evidence for HSTracker Arena. It
+deliberately distinguishes source completion from runtime proof.
 
 ## Evidence levels
 

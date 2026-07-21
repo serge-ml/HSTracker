@@ -28,7 +28,7 @@ enum ArenaChoiceAdapterError: LocalizedError {
 
 final class ArenaChoiceAdapter {
     func makeOffer(from args: ChoicesChangedEventArgs) throws -> ArenaOffer {
-        let heroCardId = args.deck.hero as String
+        let heroCardId = args.heroCardId
         guard let hero = Cards.hero(byId: heroCardId) else {
             throw ArenaChoiceAdapterError.missingHero(heroCardId)
         }

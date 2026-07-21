@@ -44,11 +44,45 @@ struct MirrorDeck {
 
 struct ChoicesChangedEventArgs {
     let choices: [MirrorCard]
-    let deck: MirrorDeck
+    let heroCardId: String
     let currentSlot: Int
     let isUnderground: Bool
     let packages: [[MirrorCard]]
     let version: Int
+
+    init(
+        choices: [MirrorCard],
+        heroCardId: String,
+        currentSlot: Int,
+        isUnderground: Bool,
+        packages: [[MirrorCard]],
+        version: Int
+    ) {
+        self.choices = choices
+        self.heroCardId = heroCardId
+        self.currentSlot = currentSlot
+        self.isUnderground = isUnderground
+        self.packages = packages
+        self.version = version
+    }
+
+    init(
+        choices: [MirrorCard],
+        deck: MirrorDeck,
+        currentSlot: Int,
+        isUnderground: Bool,
+        packages: [[MirrorCard]],
+        version: Int
+    ) {
+        self.init(
+            choices: choices,
+            heroCardId: deck.hero,
+            currentSlot: currentSlot,
+            isUnderground: isUnderground,
+            packages: packages,
+            version: version
+        )
+    }
 }
 
 struct DeckEditChangedEventArgs {
@@ -143,7 +177,7 @@ enum HearthArenaAdapterSmoke {
                     MirrorCard(cardId: "CARD_B"),
                     MirrorCard(cardId: "CORE_KAR_057")
                 ],
-                deck: MirrorDeck(hero: "HERO_MAGE"),
+                heroCardId: "HERO_MAGE",
                 currentSlot: 7,
                 isUnderground: true,
                 packages: [package, package, package],
