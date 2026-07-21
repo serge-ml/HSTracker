@@ -30,11 +30,45 @@ struct RewardsEventArgs {
 
 struct ChoicesChangedEventArgs {
     let choices: [MirrorCard]
-    let deck: MirrorDeck
+    let heroCardId: String
     let currentSlot: Int
     let isUnderground: Bool
     let packages: [[MirrorCard]]
     let version: Int
+
+    init(
+        choices: [MirrorCard],
+        heroCardId: String,
+        currentSlot: Int,
+        isUnderground: Bool,
+        packages: [[MirrorCard]],
+        version: Int
+    ) {
+        self.choices = choices
+        self.heroCardId = heroCardId
+        self.currentSlot = currentSlot
+        self.isUnderground = isUnderground
+        self.packages = packages
+        self.version = version
+    }
+
+    init(
+        choices: [MirrorCard],
+        deck: MirrorDeck,
+        currentSlot: Int,
+        isUnderground: Bool,
+        packages: [[MirrorCard]],
+        version: Int
+    ) {
+        self.init(
+            choices: choices,
+            heroCardId: deck.hero as String,
+            currentSlot: currentSlot,
+            isUnderground: isUnderground,
+            packages: packages,
+            version: version
+        )
+    }
 }
 
 struct ArenaHeroChoicesChangedEventArgs {
@@ -72,6 +106,7 @@ final class ArenaWatcher {
     private let _arenaLogLock = NSLock()
     private var _arenaLogDeckCandidate = [String]()
     private var _arenaLogOriginalDeck: [String]?
+    private var _arenaLogHeroCardId: String?
     private final let maxDeckSize = 30
     private final let maxRedraftDeckSize = 5
     
@@ -196,6 +231,7 @@ final class ArenaWatcher {
                     "choiceVersion=\(draftChoices?.version.intValue ?? -1) " +
                     "choices=[\(choiceIds.joined(separator: ","))]"
             )
+            presentDraftChoicesWithoutArenaInfo(draftChoices)
             return false
         }
         logArenaProbe(arenaInfo: arenaInfo, choices: draftChoices)
@@ -343,11 +379,70 @@ final class ArenaWatcher {
         logArenaProbe(value)
     }
 
+    private func presentDraftChoicesWithoutArenaInfo(
+        _ draftChoices: MirrorDraftChoices?
+    ) {
+        guard
+            let draftChoices = draftChoices,
+            !draftChoices.choices.isEmpty,
+            let heroCardId = arenaLogHeroCardId()
+        else {
+            return
+        }
+
+        let isUnderground = _prevIsUnderground ?? false
+        guard
+            _prevChoicesVersion != draftChoices.version.intValue ||
+            _prevIsUnderground != isUnderground
+        else {
+            return
+        }
+
+        if _prevSlot == 0 {
+            onHeroChoicePicked?(self)
+        }
+        let currentSlot = max(_prevSlot + 1, 1)
+        logger.info(
+            "Arena watcher recovered early card offer from Arena.log " +
+            "hero=\(heroCardId) slot=\(currentSlot)."
+        )
+        onChoicesChanged?(
+            self,
+            ChoicesChangedEventArgs(
+                choices: draftChoices.choices,
+                heroCardId: heroCardId,
+                currentSlot: currentSlot,
+                isUnderground: isUnderground,
+                packages: draftChoices.packages,
+                version: draftChoices.version.intValue
+            )
+        )
+
+        _prevSlot = currentSlot
+        _prevChoices = draftChoices.choices
+        _prevChoicesVersion = draftChoices.version.intValue
+        _prevPackages = draftChoices.packages
+        _prevIsUnderground = isUnderground
+        _prevArenaSessionState = .drafting
+    }
+
     func observeArenaLog(_ line: String) {
         let cardMarker =
             "DraftManager.OnChoicesAndContents - Draft deck contains card "
+        let chosenHeroMarker = "DraftManager.OnChosen(): hero="
+        let deckHeroMarker = "Hero Card ="
         _arenaLogLock.lock()
         defer { _arenaLogLock.unlock() }
+
+        if let range = line.range(of: chosenHeroMarker) {
+            _arenaLogHeroCardId = Self.firstToken(
+                in: String(line[range.upperBound...])
+            )
+        } else if let range = line.range(of: deckHeroMarker) {
+            _arenaLogHeroCardId = Self.firstToken(
+                in: String(line[range.upperBound...])
+            )
+        }
 
         if line.contains(
             "DraftManager.OnChoicesAndContents - Draft Deck ID:"
@@ -369,6 +464,21 @@ final class ArenaWatcher {
                 "Arena.log."
             )
         }
+    }
+
+    private static func firstToken(in value: String) -> String? {
+        value
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+            .split(whereSeparator: { $0.isWhitespace })
+            .first
+            .map(String.init)
+    }
+
+    private func arenaLogHeroCardId() -> String? {
+        _arenaLogLock.lock()
+        let heroCardId = _arenaLogHeroCardId
+        _arenaLogLock.unlock()
+        return heroCardId
     }
 
     private func updateDeckEditing(_ arenaInfo: MirrorArenaInfo) -> Bool {
