@@ -49,6 +49,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSUserNotificationCenterDele
             BattlegroundsPreferences(nibName: "BattlegroundsPreferences", bundle: nil),
             MercenariesPreferences(nibName: "MercenariesPreferences", bundle: nil),
             HearthArenaPreferencesController(),
+            HSReplayArenaPreferencesController(),
             UpdatePreferencesController(),
             ImportingPreferences(nibName: "ImportingPreferences", bundle: nil)
         ]

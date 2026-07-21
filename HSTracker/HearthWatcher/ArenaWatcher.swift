@@ -37,6 +37,12 @@ struct ChoicesChangedEventArgs {
     let version: Int
 }
 
+struct ArenaHeroChoicesChangedEventArgs {
+    let choices: [MirrorCard]
+    let isUnderground: Bool
+    let version: Int
+}
+
 struct DeckEditChangedEventArgs {
     let deck: MirrorDeck
     let discardedCardIds: [String]
@@ -60,6 +66,9 @@ final class ArenaWatcher {
     private var _prevArenaSessionState = ArenaSessionState.invalid
     private var _prevDeckEditSignature: String?
     private var _discardTracker: ArenaDiscardTracker?
+    private var _discardTrackerPoolSignature: String?
+    private var _redraftOriginalDeckCardIds: [String]?
+    private var _lastArenaProbeSignature: String?
     private let _arenaLogLock = NSLock()
     private var _arenaLogDeckCandidate = [String]()
     private var _arenaLogOriginalDeck: [String]?
@@ -72,6 +81,10 @@ final class ArenaWatcher {
     public var onDeckEditChanged: ((ArenaWatcher, DeckEditChangedEventArgs) -> Void)?
     public var onChoicePicked: ((ArenaWatcher) -> Void)?
     public var onDraftClosed: ((ArenaWatcher) -> Void)?
+    public var onHeroChoicesChanged:
+        ((ArenaWatcher, ArenaHeroChoicesChangedEventArgs) -> Void)?
+    public var onHeroChoicePicked: ((ArenaWatcher) -> Void)?
+    public var onHeroSelectionClosed: ((ArenaWatcher) -> Void)?
 
     init(delay: TimeInterval = 0.500) {
         self.delay = delay
@@ -99,6 +112,7 @@ final class ArenaWatcher {
         let wasWatching = _watch.exchange(false, ordering: .sequentiallyConsistent)
         if wasWatching {
             onDraftClosed?(self)
+            onHeroSelectionClosed?(self)
         }
     }
 
@@ -114,6 +128,9 @@ final class ArenaWatcher {
         _prevArenaSessionState = .invalid
         _prevDeckEditSignature = nil
         _discardTracker = nil
+        _discardTrackerPoolSignature = nil
+        _redraftOriginalDeckCardIds = nil
+        _lastArenaProbeSignature = nil
         while _watch.load(ordering: .sequentiallyConsistent) {
             Thread.sleep(forTimeInterval: delay)
 
@@ -128,9 +145,60 @@ final class ArenaWatcher {
     }
     
     func update() -> Bool {
-        guard let arenaInfo = DeckImporter.fromArena(false) else {
+        let arenaInfo = DeckImporter.fromArena(false)
+        let draftChoices = MirrorHelper.getArenaDraftChoices()
+
+        // Hearthstone can expose the hero offer while ArenaInfo still carries
+        // values from the previous run, or before ArenaInfo exists at all.
+        // Identify the offer by card type instead of relying only on
+        // currentSlot/sessionState.
+        if
+            let draftChoices = draftChoices,
+            isHeroChoiceOffer(draftChoices)
+        {
+            let isUnderground =
+                arenaInfo?.isUnderground ?? _prevIsUnderground ?? false
+            logHeroChoiceProbe(
+                arenaInfo: arenaInfo,
+                choices: draftChoices,
+                isUnderground: isUnderground
+            )
+            if
+                _prevChoicesVersion != draftChoices.version.intValue ||
+                _prevIsUnderground != isUnderground
+            {
+                onHeroChoicesChanged?(
+                    self,
+                    ArenaHeroChoicesChangedEventArgs(
+                        choices: draftChoices.choices,
+                        isUnderground: isUnderground,
+                        version: draftChoices.version.intValue
+                    )
+                )
+            }
+            _prevSlot = arenaInfo?.currentSlot.intValue ?? 0
+            _prevChoices = draftChoices.choices
+            _prevChoicesVersion = draftChoices.version.intValue
+            _prevPackages = draftChoices.packages
+            _prevIsUnderground = isUnderground
+            _prevArenaSessionState =
+                ArenaSessionState(
+                    rawValue: arenaInfo?.sessionState.intValue ??
+                        ArenaSessionState.invalid.rawValue
+                ) ?? .invalid
             return false
         }
+
+        guard let arenaInfo = arenaInfo else {
+            let choiceIds = draftChoices?.choices.map(\.cardId) ?? []
+            logArenaProbe(
+                "arenaInfo=nil " +
+                    "choiceVersion=\(draftChoices?.version.intValue ?? -1) " +
+                    "choices=[\(choiceIds.joined(separator: ","))]"
+            )
+            return false
+        }
+        logArenaProbe(arenaInfo: arenaInfo, choices: draftChoices)
         
         if arenaInfo.sessionState.intValue == ArenaSessionState.midrun.rawValue {
             if _prevArenaSessionState == .drafting {
@@ -147,6 +215,7 @@ final class ArenaWatcher {
             }
             _watch.store(false, ordering: .sequentiallyConsistent)
             onDraftClosed?(self)
+            onHeroSelectionClosed?(self)
             return true
         }
         
@@ -170,7 +239,19 @@ final class ArenaWatcher {
             _prevSlot = arenaInfo.currentSlot.intValue
         }
 
-        guard let choices = MirrorHelper.getArenaDraftChoices(), choices.choices.count > 0 else {
+        if
+            _prevSlot == 0,
+            arenaInfo.currentSlot.intValue > 0,
+            _prevIsUnderground == arenaInfo.isUnderground
+        {
+            heroPicked(arenaInfo)
+            _prevSlot = arenaInfo.currentSlot.intValue
+        }
+
+        guard
+            let choices = draftChoices,
+            choices.choices.count > 0
+        else {
             return false
         }
         
@@ -181,13 +262,16 @@ final class ArenaWatcher {
             return false
         }
         
-        // we need to check _prevIsUnderground == arenaInfo.IsUnderground
-        // otherwise changing arena mode would trigger Hero/CardPicked
-        if _prevSlot == 0 && arenaInfo.currentSlot.intValue == 1 && _prevIsUnderground == arenaInfo.isUnderground {
-            heroPicked(arenaInfo)
-        }
-
-        if arenaInfo.currentSlot.intValue > 0 {
+        if arenaInfo.currentSlot.intValue == 0 {
+            onHeroChoicesChanged?(
+                self,
+                ArenaHeroChoicesChangedEventArgs(
+                    choices: choices.choices,
+                    isUnderground: arenaInfo.isUnderground,
+                    version: choices.version.intValue
+                )
+            )
+        } else {
             onChoicesChanged?(
                 self,
                 ChoicesChangedEventArgs(
@@ -211,6 +295,54 @@ final class ArenaWatcher {
         return false
     }
 
+    private func isHeroChoiceOffer(
+        _ choices: MirrorDraftChoices
+    ) -> Bool {
+        choices.choices.count == 3 &&
+            choices.choices.allSatisfy {
+                Cards.hero(byId: $0.cardId) != nil
+            }
+    }
+
+    private func logArenaProbe(_ value: String) {
+        guard value != _lastArenaProbeSignature else { return }
+        _lastArenaProbeSignature = value
+        logger.info("Arena watcher probe \(value)")
+    }
+
+    private func logArenaProbe(
+        arenaInfo: MirrorArenaInfo,
+        choices: MirrorDraftChoices?
+    ) {
+        let choiceIds = choices?.choices.map(\.cardId) ?? []
+        let value = [
+            "session=\(arenaInfo.sessionState.intValue)",
+            "slot=\(arenaInfo.currentSlot.intValue)",
+            "deckCards=\(expandedCardIds(arenaInfo.deck).count)",
+            "underground=\(arenaInfo.isUnderground)",
+            "choiceVersion=\(choices?.version.intValue ?? -1)",
+            "choices=[\(choiceIds.joined(separator: ","))]"
+        ].joined(separator: " ")
+        logArenaProbe(value)
+    }
+
+    private func logHeroChoiceProbe(
+        arenaInfo: MirrorArenaInfo?,
+        choices: MirrorDraftChoices,
+        isUnderground: Bool
+    ) {
+        let choiceIds = choices.choices.map(\.cardId)
+        let value = [
+            "heroOffer",
+            "session=\(arenaInfo?.sessionState.intValue ?? -1)",
+            "slot=\(arenaInfo?.currentSlot.intValue ?? -1)",
+            "underground=\(isUnderground)",
+            "choiceVersion=\(choices.version.intValue)",
+            "choices=[\(choiceIds.joined(separator: ","))]"
+        ].joined(separator: " ")
+        logArenaProbe(value)
+    }
+
     func observeArenaLog(_ line: String) {
         let cardMarker =
             "DraftManager.OnChoicesAndContents - Draft deck contains card "
@@ -228,8 +360,14 @@ final class ArenaWatcher {
                 _arenaLogDeckCandidate.append(cardId)
             }
         } else if line.contains("SetDraftMode - REDRAFTING"),
-                  _arenaLogDeckCandidate.count == maxDeckSize {
+                  !_arenaLogDeckCandidate.isEmpty,
+                  _arenaLogDeckCandidate.count <= maxDeckSize {
             _arenaLogOriginalDeck = _arenaLogDeckCandidate
+            logger.info(
+                "Arena deck edit captured " +
+                "\(_arenaLogDeckCandidate.count) original deck rows from " +
+                "Arena.log."
+            )
         }
     }
 
@@ -245,28 +383,55 @@ final class ArenaWatcher {
             }
             _prevDeckEditSignature = nil
             _discardTracker = nil
+            _discardTrackerPoolSignature = nil
             return false
         }
 
+        let currentDeckCardIds = expandedCardIds(arenaInfo.deck)
+        let initialDiscardCardIds = expandedCardIds(arenaInfo.redraftDeck)
+        guard
+            currentDeckCardIds.count == maxDeckSize,
+            initialDiscardCardIds.count == maxRedraftDeckSize
+        else {
+            return false
+        }
+        let recoveredOriginalDeckCardIds = arenaLogOriginalDeck(
+            currentDeckCardIds: currentDeckCardIds
+        )
+        let reliableOriginalDeckCardIds =
+            _redraftOriginalDeckCardIds ?? recoveredOriginalDeckCardIds
+        let originalDeckCardIds =
+            reliableOriginalDeckCardIds ?? currentDeckCardIds
+        let hasReliablePool = reliableOriginalDeckCardIds != nil
+        let poolSignature = originalDeckCardIds.joined(separator: ",")
         let signature = [
             deckSignature(arenaInfo.deck),
             deckSignature(arenaInfo.redraftDeck),
+            poolSignature,
             arenaInfo.isUnderground ? "underground" : "arena"
         ].joined(separator: "|")
         guard signature != _prevDeckEditSignature else {
             return false
         }
 
-        let currentDeckCardIds = expandedCardIds(arenaInfo.deck)
-        let initialDiscardCardIds = expandedCardIds(arenaInfo.redraftDeck)
-        if _discardTracker == nil {
-            let originalDeckCardIds =
-                arenaLogOriginalDeck() ?? currentDeckCardIds
+        if
+            _discardTracker == nil ||
+            _discardTrackerPoolSignature != poolSignature
+        {
             _discardTracker = ArenaDiscardTracker(
                 originalDeckCardIds: originalDeckCardIds,
                 initialDiscardCardIds: initialDiscardCardIds,
                 currentDeckCardIds: currentDeckCardIds
             )
+            _discardTrackerPoolSignature = poolSignature
+            if
+                hasReliablePool,
+                let cachedCardIds = UserDefaults.standard.stringArray(
+                    forKey: discardCacheKey(arenaInfo.redraftDeck)
+                )
+            {
+                _discardTracker?.restoreDiscardedCardIds(cachedCardIds)
+            }
         } else if !_discardTracker!.update(
             currentDeckCardIds: currentDeckCardIds
         ) {
@@ -280,6 +445,12 @@ final class ArenaWatcher {
             discardedCardIds.count == maxRedraftDeckSize
         else {
             return false
+        }
+        if hasReliablePool {
+            UserDefaults.standard.set(
+                discardedCardIds,
+                forKey: discardCacheKey(arenaInfo.redraftDeck)
+            )
         }
 
         _prevDeckEditSignature = signature
@@ -296,16 +467,30 @@ final class ArenaWatcher {
         return false
     }
 
-    private func arenaLogOriginalDeck() -> [String]? {
+    private func arenaLogOriginalDeck(
+        currentDeckCardIds: [String]
+    ) -> [String]? {
         _arenaLogLock.lock()
-        defer { _arenaLogLock.unlock() }
-        return _arenaLogOriginalDeck
+        let originalRows = _arenaLogOriginalDeck
+        _arenaLogLock.unlock()
+        guard let originalRows = originalRows else {
+            return nil
+        }
+
+        return ArenaDiscardTracker.inferOriginalDeckCardIds(
+            originalDeckRows: originalRows,
+            currentDeckCardIds: currentDeckCardIds
+        )
     }
 
     private func expandedCardIds(_ deck: MirrorDeck) -> [String] {
         deck.cards.flatMap {
             Array(repeating: $0.cardId, count: $0.count.intValue)
         }
+    }
+
+    private func discardCacheKey(_ redraftDeck: MirrorDeck) -> String {
+        "heartharena.deck-edit.discard.\(redraftDeck.id.int64Value)"
     }
 
     private func deckSignature(_ deck: MirrorDeck) -> String {
@@ -318,6 +503,11 @@ final class ArenaWatcher {
     
     private func updateRedraft(_ arenaInfo: MirrorArenaInfo) -> Bool {
         _discardTracker = nil
+        _discardTrackerPoolSignature = nil
+        let originalDeckCardIds = expandedCardIds(arenaInfo.deck)
+        if originalDeckCardIds.count == maxDeckSize {
+            _redraftOriginalDeckCardIds = originalDeckCardIds
+        }
         let redraftSlot = arenaInfo.redraftCurrentSlot.intValue
         
         guard let choices = MirrorHelper.getArenaDraftChoices(), choices.choices.count > 0 else {
@@ -360,7 +550,7 @@ final class ArenaWatcher {
     }
     
     private func heroPicked(_ arenaInfo: MirrorArenaInfo) {
-        // TODO
+        onHeroChoicePicked?(self)
     }
     
     private func cardPicked(_ arenaInfo: MirrorArenaInfo) {

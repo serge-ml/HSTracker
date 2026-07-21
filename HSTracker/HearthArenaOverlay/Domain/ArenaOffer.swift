@@ -135,6 +135,33 @@ struct ArenaDiscardTracker: Equatable {
         return true
     }
 
+    @discardableResult
+    mutating func restoreDiscardedCardIds(_ cardIds: [String]) -> Bool {
+        guard
+            cardIds.count == 5,
+            Self.counts(for: cardIds) ==
+                Self.counts(for: discardedCardIds)
+        else {
+            return false
+        }
+        discardedCardIds = cardIds
+        return true
+    }
+
+    static func inferOriginalDeckCardIds(
+        originalDeckRows: [String],
+        currentDeckCardIds: [String]
+    ) -> [String]? {
+        let currentCounts = counts(for: currentDeckCardIds)
+        let inferredDeck = originalDeckRows.flatMap { cardId in
+            Array(
+                repeating: cardId,
+                count: max(1, currentCounts[cardId, default: 0])
+            )
+        }
+        return inferredDeck.count == 30 ? inferredDeck : nil
+    }
+
     private static func counts(for cardIds: [String]) -> [String: Int] {
         cardIds.reduce(into: [:]) { result, cardId in
             result[cardId, default: 0] += 1

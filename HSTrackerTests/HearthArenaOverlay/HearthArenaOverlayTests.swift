@@ -310,6 +310,74 @@ final class HearthArenaOverlayTests: XCTestCase {
         )
     }
 
+    func testDiscardTrackerRecoversOneSwapAfterRestart() throws {
+        let originalDeck =
+            ["DECK_A"] + Array(repeating: "DECK_B", count: 29)
+        let initialDiscard = ["CUT_A", "CUT_B", "CUT_C", "CUT_D", "CUT_E"]
+        var currentDeck = originalDeck
+        currentDeck.removeFirst()
+        currentDeck.append("CUT_C")
+
+        let tracker = try XCTUnwrap(
+            ArenaDiscardTracker(
+                originalDeckCardIds: originalDeck,
+                initialDiscardCardIds: initialDiscard,
+                currentDeckCardIds: currentDeck
+            )
+        )
+        XCTAssertEqual(
+            tracker.discardedCardIds,
+            ["CUT_A", "CUT_B", "DECK_A", "CUT_D", "CUT_E"]
+        )
+    }
+
+    func testDiscardTrackerInfersThirtyCardsFromAggregatedLogRows() throws {
+        let originalRows =
+            ["REMOVED_A", "REMOVED_B"] +
+            (0..<20).map { "SINGLE_\($0)" } +
+            (0..<4).map { "DOUBLE_\($0)" }
+        let currentDeck =
+            (0..<20).map { "SINGLE_\($0)" } +
+            (0..<4).flatMap {
+                Array(repeating: "DOUBLE_\($0)", count: 2)
+            } +
+            ["NEW_A", "NEW_B"]
+
+        let inferred = try XCTUnwrap(
+            ArenaDiscardTracker.inferOriginalDeckCardIds(
+                originalDeckRows: originalRows,
+                currentDeckCardIds: currentDeck
+            )
+        )
+        XCTAssertEqual(inferred.count, 30)
+        XCTAssertEqual(inferred.filter { $0 == "REMOVED_A" }.count, 1)
+        XCTAssertEqual(inferred.filter { $0 == "DOUBLE_2" }.count, 2)
+        XCTAssertFalse(inferred.contains("NEW_A"))
+    }
+
+    func testDiscardTrackerRestoresOnlyMatchingPhysicalSlots() throws {
+        let originalDeck = Array(repeating: "DECK", count: 30)
+        let initialDiscard = ["A", "B", "C", "D", "E"]
+        var tracker = try XCTUnwrap(
+            ArenaDiscardTracker(
+                originalDeckCardIds: originalDeck,
+                initialDiscardCardIds: initialDiscard,
+                currentDeckCardIds: originalDeck
+            )
+        )
+
+        XCTAssertTrue(
+            tracker.restoreDiscardedCardIds(["E", "C", "A", "D", "B"])
+        )
+        XCTAssertEqual(
+            tracker.discardedCardIds,
+            ["E", "C", "A", "D", "B"]
+        )
+        XCTAssertFalse(
+            tracker.restoreDiscardedCardIds(["E", "C", "A", "D", "X"])
+        )
+    }
+
     func testCacheReportsStaleSnapshotAndRoundTripsExactDate() throws {
         let directory = FileManager.default.temporaryDirectory
             .appendingPathComponent(UUID().uuidString, isDirectory: true)

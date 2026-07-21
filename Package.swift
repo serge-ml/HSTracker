@@ -11,6 +11,10 @@ let package = Package(
         .library(
             name: "HearthArenaCore",
             targets: ["HearthArenaCore"]
+        ),
+        .library(
+            name: "HSReplayArenaCore",
+            targets: ["HSReplayArenaCore"]
         )
     ],
     targets: [
@@ -37,6 +41,24 @@ let package = Package(
                 "Diagnostics/HearthArenaDiagnostics.swift"
             ]
         ),
+        .target(
+            name: "HSReplayArenaCore",
+            path: "HSTracker/HSReplayArenaOverlay",
+            exclude: [
+                "Integration",
+                "Settings",
+                "UI"
+            ],
+            sources: [
+                "Domain/HSReplayArenaClassStats.swift",
+                "Data/HSReplayArenaClient.swift",
+                "Data/HSReplayArenaJSONParser.swift",
+                "Data/HSReplayArenaClassStatsValidator.swift",
+                "Data/HSReplayArenaClassStatsCache.swift",
+                "Data/HSReplayArenaClassStatsStore.swift",
+                "Diagnostics/HSReplayArenaDiagnostics.swift"
+            ]
+        ),
         .testTarget(
             name: "HearthArenaCoreTests",
             dependencies: ["HearthArenaCore"],
@@ -45,6 +67,12 @@ let package = Package(
             resources: [
                 .copy("Fixtures/heartharena-tierlist-sample.html")
             ]
+        ),
+        .testTarget(
+            name: "HSReplayArenaCoreTests",
+            dependencies: ["HSReplayArenaCore"],
+            path: "HSTrackerTests/HSReplayArenaOverlay",
+            sources: ["HSReplayArenaOverlayTests.swift"]
         )
     ]
 )
