@@ -1,0 +1,25 @@
+<?xml version="1.0" standalone="yes"?><!-- sparkle-sign-warning:
+IMPORTANT: This file was signed by Sparkle. Any modifications to this file requires re-signing this file with generate_appcast or sign_update! The signed signature will be embedded at the end of this file.
+--><rss xmlns:sparkle="http://www.andymatuschak.org/xml-namespaces/sparkle" version="2.0">
+    <channel>
+        <title>HSTracker Arena</title>
+        <item>
+            <title>3.6.1</title>
+            <pubDate>Tue, 21 Jul 2026 12:27:16 +0000</pubDate>
+            <link>https://github.com/serge-ml/HSTracker/releases/tag/arena-v3.6.1-b100027</link>
+            <sparkle:version>100027</sparkle:version>
+            <sparkle:shortVersionString>3.6.1</sparkle:shortVersionString>
+            <sparkle:minimumSystemVersion>10.14</sparkle:minimumSystemVersion>
+            <description sparkle:format="markdown"><![CDATA[# HSTracker Arena 3.6.1 (100027)
+
+- Source commit: `2d38f37f1dda7e6b200868ef9460203a91602b98`
+- CI run: 29824313303
+- Update channel: HSTracker Arena fork
+]]></description>
+            <enclosure url="https://github.com/serge-ml/HSTracker/releases/download/arena-v3.6.1-b100027/HSTracker-Arena-3.6.1-100027.zip" length="82469743" type="application/octet-stream" sparkle:edSignature="X9puaiWmS/J4vNiqtaLjMMZWH7DedLmAjryW0q6k2mDg+417JpJH9NLy8WrTDfFzrLXUQncoPJ8VJTHSGFpKAg=="></enclosure>
+        </item>
+    </channel>
+</rss><!-- sparkle-signatures:
+edSignature: Btf1E0NWN4djiZRQKCzgP9k/FDzIDRuHpIU/r+Kwz8hyd7wj/mwchn4IwarZfQQIQRAZyhIOA0vaNXNqiB/nBg==
+length: 1414
+-->
