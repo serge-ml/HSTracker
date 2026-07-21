@@ -59,6 +59,13 @@ class Paths {
         return HSTracker.appendingPathComponent("heartharena", isDirectory: true)
     }()
 
+    static let hsReplayArena: URL = {
+        return HSTracker.appendingPathComponent(
+            "hsreplay-arena",
+            isDirectory: true
+        )
+    }()
+
     static let logs: URL = {
         let paths = FileManager.default.urls(for: .libraryDirectory,
                                              in: .userDomainMask)
@@ -72,7 +79,7 @@ class Paths {
     static func initDirs() {
         let paths = [
             cards, decks, replays, cardJson, logs, tmpReplays, tiles, arts,
-            cards, cardsBG, arenaJson, hearthArena
+            cards, cardsBG, arenaJson, hearthArena, hsReplayArena
         ]
         let fileManager = FileManager.default
         for path in paths {

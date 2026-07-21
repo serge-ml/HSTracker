@@ -1512,6 +1512,21 @@
 		C0D3C0010000000000000022 /* ArenaPackageRatingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0D3B0010000000000000022 /* ArenaPackageRatingView.swift */; };
 		C0D3C0020000000000000001 /* heartharena-tierlist-sample.html in Resources */ = {isa = PBXBuildFile; fileRef = C0D3B0020000000000000001 /* heartharena-tierlist-sample.html */; };
 		C0D3C0020000000000000002 /* HearthArenaOverlayTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0D3B0020000000000000002 /* HearthArenaOverlayTests.swift */; };
+		C0D5C0010000000000000001 /* HSReplayArenaClassStats.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0D5B0010000000000000001 /* HSReplayArenaClassStats.swift */; };
+		C0D5C0010000000000000002 /* HSReplayArenaClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0D5B0010000000000000002 /* HSReplayArenaClient.swift */; };
+		C0D5C0010000000000000003 /* HSReplayArenaJSONParser.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0D5B0010000000000000003 /* HSReplayArenaJSONParser.swift */; };
+		C0D5C0010000000000000004 /* HSReplayArenaClassStatsValidator.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0D5B0010000000000000004 /* HSReplayArenaClassStatsValidator.swift */; };
+		C0D5C0010000000000000005 /* HSReplayArenaClassStatsCache.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0D5B0010000000000000005 /* HSReplayArenaClassStatsCache.swift */; };
+		C0D5C0010000000000000006 /* HSReplayArenaClassStatsStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0D5B0010000000000000006 /* HSReplayArenaClassStatsStore.swift */; };
+		C0D5C0010000000000000007 /* HSReplayArenaHeroChoiceAdapter.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0D5B0010000000000000007 /* HSReplayArenaHeroChoiceAdapter.swift */; };
+		C0D5C0010000000000000008 /* HSReplayArenaFeatureBootstrap.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0D5B0010000000000000008 /* HSReplayArenaFeatureBootstrap.swift */; };
+		C0D5C0010000000000000009 /* HSReplayArenaSettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0D5B0010000000000000009 /* HSReplayArenaSettings.swift */; };
+		C0D5C0010000000000000010 /* HSReplayArenaPreferencesController.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0D5B0010000000000000010 /* HSReplayArenaPreferencesController.swift */; };
+		C0D5C0010000000000000011 /* HSReplayArenaOverlayLayout.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0D5B0010000000000000011 /* HSReplayArenaOverlayLayout.swift */; };
+		C0D5C0010000000000000012 /* HSReplayArenaHeroRatingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0D5B0010000000000000012 /* HSReplayArenaHeroRatingView.swift */; };
+		C0D5C0010000000000000013 /* HSReplayArenaHeroOverlayController.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0D5B0010000000000000013 /* HSReplayArenaHeroOverlayController.swift */; };
+		C0D5C0010000000000000014 /* HSReplayArenaDiagnostics.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0D5B0010000000000000014 /* HSReplayArenaDiagnostics.swift */; };
+		C0D5C0020000000000000001 /* HSReplayArenaOverlayTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0D5B0020000000000000001 /* HSReplayArenaOverlayTests.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -2746,6 +2761,21 @@
 		C0D3B0010000000000000022 /* ArenaPackageRatingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ArenaPackageRatingView.swift; sourceTree = "<group>"; };
 		C0D3B0020000000000000001 /* heartharena-tierlist-sample.html */ = {isa = PBXFileReference; lastKnownFileType = text.html; path = HearthArenaOverlay/Fixtures/heartharena-tierlist-sample.html; sourceTree = "<group>"; };
 		C0D3B0020000000000000002 /* HearthArenaOverlayTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HearthArenaOverlay/HearthArenaOverlayTests.swift; sourceTree = "<group>"; };
+		C0D5B0010000000000000001 /* HSReplayArenaClassStats.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HSReplayArenaClassStats.swift; sourceTree = "<group>"; };
+		C0D5B0010000000000000002 /* HSReplayArenaClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HSReplayArenaClient.swift; sourceTree = "<group>"; };
+		C0D5B0010000000000000003 /* HSReplayArenaJSONParser.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HSReplayArenaJSONParser.swift; sourceTree = "<group>"; };
+		C0D5B0010000000000000004 /* HSReplayArenaClassStatsValidator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HSReplayArenaClassStatsValidator.swift; sourceTree = "<group>"; };
+		C0D5B0010000000000000005 /* HSReplayArenaClassStatsCache.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HSReplayArenaClassStatsCache.swift; sourceTree = "<group>"; };
+		C0D5B0010000000000000006 /* HSReplayArenaClassStatsStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HSReplayArenaClassStatsStore.swift; sourceTree = "<group>"; };
+		C0D5B0010000000000000007 /* HSReplayArenaHeroChoiceAdapter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HSReplayArenaHeroChoiceAdapter.swift; sourceTree = "<group>"; };
+		C0D5B0010000000000000008 /* HSReplayArenaFeatureBootstrap.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HSReplayArenaFeatureBootstrap.swift; sourceTree = "<group>"; };
+		C0D5B0010000000000000009 /* HSReplayArenaSettings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HSReplayArenaSettings.swift; sourceTree = "<group>"; };
+		C0D5B0010000000000000010 /* HSReplayArenaPreferencesController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HSReplayArenaPreferencesController.swift; sourceTree = "<group>"; };
+		C0D5B0010000000000000011 /* HSReplayArenaOverlayLayout.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HSReplayArenaOverlayLayout.swift; sourceTree = "<group>"; };
+		C0D5B0010000000000000012 /* HSReplayArenaHeroRatingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HSReplayArenaHeroRatingView.swift; sourceTree = "<group>"; };
+		C0D5B0010000000000000013 /* HSReplayArenaHeroOverlayController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HSReplayArenaHeroOverlayController.swift; sourceTree = "<group>"; };
+		C0D5B0010000000000000014 /* HSReplayArenaDiagnostics.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HSReplayArenaDiagnostics.swift; sourceTree = "<group>"; };
+		C0D5B0020000000000000001 /* HSReplayArenaOverlayTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HSReplayArenaOverlay/HSReplayArenaOverlayTests.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
@@ -2885,6 +2915,75 @@
 			isa = PBXGroup;
 			children = (
 				C0D3B0010000000000000020 /* HearthArenaDiagnostics.swift */,
+			);
+			path = Diagnostics;
+			sourceTree = "<group>";
+		};
+		C0D5A0000000000000000001 /* HSReplayArenaOverlay */ = {
+			isa = PBXGroup;
+			children = (
+				C0D5A0000000000000000002 /* Domain */,
+				C0D5A0000000000000000003 /* Data */,
+				C0D5A0000000000000000004 /* Integration */,
+				C0D5A0000000000000000005 /* UI */,
+				C0D5A0000000000000000006 /* Settings */,
+				C0D5A0000000000000000007 /* Diagnostics */,
+			);
+			path = HSReplayArenaOverlay;
+			sourceTree = "<group>";
+		};
+		C0D5A0000000000000000002 /* Domain */ = {
+			isa = PBXGroup;
+			children = (
+				C0D5B0010000000000000001 /* HSReplayArenaClassStats.swift */,
+			);
+			path = Domain;
+			sourceTree = "<group>";
+		};
+		C0D5A0000000000000000003 /* Data */ = {
+			isa = PBXGroup;
+			children = (
+				C0D5B0010000000000000002 /* HSReplayArenaClient.swift */,
+				C0D5B0010000000000000005 /* HSReplayArenaClassStatsCache.swift */,
+				C0D5B0010000000000000006 /* HSReplayArenaClassStatsStore.swift */,
+				C0D5B0010000000000000004 /* HSReplayArenaClassStatsValidator.swift */,
+				C0D5B0010000000000000003 /* HSReplayArenaJSONParser.swift */,
+			);
+			path = Data;
+			sourceTree = "<group>";
+		};
+		C0D5A0000000000000000004 /* Integration */ = {
+			isa = PBXGroup;
+			children = (
+				C0D5B0010000000000000008 /* HSReplayArenaFeatureBootstrap.swift */,
+				C0D5B0010000000000000007 /* HSReplayArenaHeroChoiceAdapter.swift */,
+			);
+			path = Integration;
+			sourceTree = "<group>";
+		};
+		C0D5A0000000000000000005 /* UI */ = {
+			isa = PBXGroup;
+			children = (
+				C0D5B0010000000000000013 /* HSReplayArenaHeroOverlayController.swift */,
+				C0D5B0010000000000000012 /* HSReplayArenaHeroRatingView.swift */,
+				C0D5B0010000000000000011 /* HSReplayArenaOverlayLayout.swift */,
+			);
+			path = UI;
+			sourceTree = "<group>";
+		};
+		C0D5A0000000000000000006 /* Settings */ = {
+			isa = PBXGroup;
+			children = (
+				C0D5B0010000000000000010 /* HSReplayArenaPreferencesController.swift */,
+				C0D5B0010000000000000009 /* HSReplayArenaSettings.swift */,
+			);
+			path = Settings;
+			sourceTree = "<group>";
+		};
+		C0D5A0000000000000000007 /* Diagnostics */ = {
+			isa = PBXGroup;
+			children = (
+				C0D5B0010000000000000014 /* HSReplayArenaDiagnostics.swift */,
 			);
 			path = Diagnostics;
 			sourceTree = "<group>";
@@ -3135,6 +3234,7 @@
 				4323C5E31E1695DD00C97896 /* HearthMirror */,
 				C0D3A0000000000000000001 /* HearthArenaOverlay */,
 				C0D4A0000000000000000001 /* Updater */,
+				C0D5A0000000000000000001 /* HSReplayArenaOverlay */,
 				B82AE5FB28BE8631004A8FE0 /* HearthMirror-version.txt */,
 				43B695551C90653A00F4D0AC /* Hearthstone */,
 				B854622B2CE007A90083BB31 /* HearthWatcher */,
@@ -3159,6 +3259,7 @@
 			children = (
 				C0D3B0020000000000000002 /* HearthArenaOverlayTests.swift */,
 				C0D3B0020000000000000001 /* heartharena-tierlist-sample.html */,
+				C0D5B0020000000000000001 /* HSReplayArenaOverlayTests.swift */,
 				1CF1B5891E81426D007DCBF2 /* AlgorithmTests.swift */,
 				439C7E601C7772C100D29859 /* HSTrackerTests.swift */,
 				1CF1B58B1E815810007DCBF2 /* LogReaderTests.swift */,
@@ -5255,6 +5356,20 @@
 				C0D3C0010000000000000020 /* HearthArenaDiagnostics.swift in Sources */,
 				C0D3C0010000000000000021 /* ArenaOfferStateMachine.swift in Sources */,
 				C0D3C0010000000000000022 /* ArenaPackageRatingView.swift in Sources */,
+				C0D5C0010000000000000001 /* HSReplayArenaClassStats.swift in Sources */,
+				C0D5C0010000000000000002 /* HSReplayArenaClient.swift in Sources */,
+				C0D5C0010000000000000003 /* HSReplayArenaJSONParser.swift in Sources */,
+				C0D5C0010000000000000004 /* HSReplayArenaClassStatsValidator.swift in Sources */,
+				C0D5C0010000000000000005 /* HSReplayArenaClassStatsCache.swift in Sources */,
+				C0D5C0010000000000000006 /* HSReplayArenaClassStatsStore.swift in Sources */,
+				C0D5C0010000000000000007 /* HSReplayArenaHeroChoiceAdapter.swift in Sources */,
+				C0D5C0010000000000000008 /* HSReplayArenaFeatureBootstrap.swift in Sources */,
+				C0D5C0010000000000000009 /* HSReplayArenaSettings.swift in Sources */,
+				C0D5C0010000000000000010 /* HSReplayArenaPreferencesController.swift in Sources */,
+				C0D5C0010000000000000011 /* HSReplayArenaOverlayLayout.swift in Sources */,
+				C0D5C0010000000000000012 /* HSReplayArenaHeroRatingView.swift in Sources */,
+				C0D5C0010000000000000013 /* HSReplayArenaHeroOverlayController.swift in Sources */,
+				C0D5C0010000000000000014 /* HSReplayArenaDiagnostics.swift in Sources */,
 				B8956CFD25509B3F0073D70C /* BattlegroundsMinionView.swift in Sources */,
 				B86D89E62D95EC4D00AB65A5 /* FerociousFelbat.swift in Sources */,
 				B85462142CDEB9FF0083BB31 /* CrewmateGenerator.swift in Sources */,
@@ -6292,6 +6407,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				C0D3C0020000000000000002 /* HearthArenaOverlayTests.swift in Sources */,
+				C0D5C0020000000000000001 /* HSReplayArenaOverlayTests.swift in Sources */,
 				B86FFA7F299C68870093689E /* NSButton.swift in Sources */,
 				B86FFA7E299C67B50093689E /* ViewModel.swift in Sources */,
 				B86FFA7D299C67AE0093689E /* Debounce.swift in Sources */,
