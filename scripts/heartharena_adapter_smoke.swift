@@ -213,6 +213,26 @@ enum HearthArenaAdapterSmoke {
             "package conversion"
         )
 
+        let legendaryOffer = try adapter.makeOffer(
+            from: ChoicesChangedEventArgs(
+                choices: [
+                    MirrorCard(cardId: "CARD_A"),
+                    MirrorCard(cardId: "CARD_B"),
+                    MirrorCard(cardId: "CORE_KAR_057")
+                ],
+                heroCardId: "HERO_MAGE",
+                currentSlot: 1,
+                isUnderground: false,
+                packages: [[], [], []],
+                version: 5
+            )
+        )
+        try require(
+            legendaryOffer.cards.count == 3 &&
+                legendaryOffer.packages.isEmpty,
+            "empty package placeholders normalize to a regular offer"
+        )
+
         try expectMissingHero(adapter)
         try expectUnsupportedClass(adapter)
         try expectEmptyChoices(adapter)

@@ -40,6 +40,15 @@ final class ArenaChoiceAdapter {
         guard !cards.isEmpty else {
             throw ArenaChoiceAdapterError.emptyChoices
         }
+        let packages = args.packages.map { $0.map(makeOfferedCard) }
+        // HearthMirror represents some ordinary three-card offers (including
+        // the initial Legendary pick) with a three-slot package container
+        // whose slots are all empty. Treat that placeholder as no packages;
+        // otherwise the presentation layer rejects the offer as a malformed
+        // package draft and hides all ratings.
+        let normalizedPackages = packages.allSatisfy(\.isEmpty)
+            ? []
+            : packages
 
         return ArenaOffer(
             offerVersion: args.version,
@@ -47,7 +56,7 @@ final class ArenaChoiceAdapter {
             heroClass: heroClass,
             isUnderground: args.isUnderground,
             cards: cards,
-            packages: args.packages.map { $0.map(makeOfferedCard) }
+            packages: normalizedPackages
         )
     }
 

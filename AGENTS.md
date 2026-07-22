@@ -2,9 +2,15 @@
 
 ## Local verification
 
-- Do not run local full-application builds, including `xcodebuild build`,
-  `xcodebuild archive`, or repository scripts that build/package the macOS app,
-  unless the user explicitly requests a local build.
+- Do not run clean builds, archives, Release builds, or repository delivery
+  scripts that build/package the macOS app unless the user explicitly requests
+  that level of verification.
+- A user report about behavior in the running app, or a request to fix visible
+  UI/runtime behavior, implicitly authorizes the persistent incremental Debug
+  build/install/relaunch fast path below. Do not require a separate request to
+  "build the app," and do not stop after isolated tests when the user needs the
+  installed app to exercise the fix. A request limited to review, explanation,
+  or diagnosis does not authorize an app build.
 - Do not use a local full-app build as a routine pre-commit check. Full Debug
   and Release builds are verified by GitHub Actions.
 - Prefer lightweight, targeted tests, smoke checks, linting, and static
@@ -19,15 +25,27 @@
      layout, adapter, mapping, or related isolated code when applicable.
   3. Run static validation such as `plutil`, `xmllint`, or `bash -n` for project
      metadata, XIB, plist, and shell-script-only changes.
-  4. Build and launch the real app only when behavior cannot be established by
-     the preceding layers and the user explicitly requests a local build.
-- When a real local app test is explicitly requested, prefer a persistent,
-  incremental Debug development build over the Release delivery path:
+  4. For a running-app bug fix or visible UI/runtime change, run the applicable
+     checks above and then update the installed app with the incremental Debug
+     fast path so the user can immediately verify the result. For non-runtime
+     work, build the app only when the preceding layers cannot establish the
+     behavior or the user requests it.
+- For the incremental Debug development path:
   - reuse stable DerivedData and Swift package checkout directories;
+    the default locations are `build/local/DerivedData` and
+    `build/local/SourcePackages`;
+  - use the `HSTracker` scheme, Debug configuration, macOS destination,
+    `ONLY_ACTIVE_ARCH=YES`, `CODE_SIGNING_ALLOWED=NO`, and
+    `-disableAutomaticPackageResolution`;
   - compile only the active architecture;
   - do not clean caches as a routine step;
   - do not resolve packages again unless `Package.resolved` or package state
     changed;
+  - the current `scripts/hstracker_arena_app.sh install` path builds Release,
+    so do not use it for an ordinary incremental Debug iteration;
+  - copy the completed Debug app to a staging bundle, sign it with the required
+    entitlements and stable designated requirement, and verify the signature
+    and bundle identifier before installation;
   - keep the app bundle identifier, required entitlements, signing, stable
     `/Applications/HSTracker Arena.app` path, atomic replacement, and rollback
     behavior needed for Accessibility and HearthMirror testing;
@@ -49,8 +67,9 @@
   every build.
 - Avoid repeatedly copying or re-signing unchanged large Mono, card-data,
   HearthMirror, HearthDb, or BobsBuddy resources during the compile-only part
-  of the development loop. Perform installation/signing work only when a real
-  app run is requested.
+  of the development loop. Perform installation/signing work only when the
+  running-app fast path is authorized above or the user otherwise requests a
+  real app run.
 - When changing build performance, measure a warm incremental build before and
   after with Xcode's timing summary (for example,
   `-showBuildTimingSummary`). Do not run that measurement without the local
