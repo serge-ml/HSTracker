@@ -94,7 +94,7 @@ approved.
 | Requirement | State | Evidence |
 |---|---|---|
 | Scheduled upstream check and sync PR | Implemented, execution pending | `upstream-sync.yml` |
-| Nightly parser/mapping health | Implemented, live parser proven locally | CI opens/updates an issue on failure |
+| Nightly parser/mapping health | Implemented, live parser proven locally | `parser-health.yml` opens/updates an issue on failure |
 | Fork version | Proven structurally | upstream 3.6.1 plus `ha.1` |
 | ZIP and SHA-256 | Implemented, execution pending | manual unsigned personal-build workflow |
 | Persistent local build and `/Applications` delivery | Proven locally | Release build, entitlement-preserving signing, resource/signature verification, atomic install and relaunch completed |
