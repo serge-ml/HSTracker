@@ -97,10 +97,12 @@ xcodebuild build \
 The SwiftPM suite contains the HearthArena unit tests and compiles the same
 Domain, Data and Diagnostics files used by the app. The inherited
 `HSTrackerTests` Xcode target is not a dependable repository-wide gate in this
-checkout because it omits hundreds of application source files. CI therefore
-runs `swift test`, then builds the complete unsigned app in both
-configurations. Build-time downloads use the macOS-provided `curl`; `wget` is
-not required.
+checkout because it omits hundreds of application source files. Pull-request
+CI therefore runs `swift test`, then builds the complete unsigned app in both
+configurations. Default-branch CI rebuilds only Release because Debug was
+already required before merge and the release workflow consumes only the
+Release artifact. Build-time downloads use the macOS-provided `curl`; `wget`
+is not required.
 
 The fork updater boundary can be checked independently:
 
@@ -209,9 +211,9 @@ swiftc \
 /tmp/heartharena-layout-smoke
 ```
 
-The scheduled parser-health job also compares exact HearthArena card IDs with
-the current full English HearthstoneJSON `cards.json` database used by
-HSTracker and fails below 99.5% coverage.
+The separate scheduled `HSTracker Arena parser health` workflow also compares
+exact HearthArena card IDs with the current full English HearthstoneJSON
+`cards.json` database used by HSTracker and fails below 99.5% coverage.
 
 ## First-run safety
 
@@ -319,6 +321,7 @@ those locations.
 ### Running and diagnosing automation
 
 - CI: Actions → `HSTracker Arena CI` → Run workflow.
+- Parser health: Actions → `HSTracker Arena parser health` → Run workflow.
 - Sync: Actions → `HSTracker upstream sync` → Run workflow.
 - Release: allow the automatic post-CI run on the default branch, or run
   `HSTracker Arena Release` manually with the successful CI run ID.

@@ -32,11 +32,12 @@ The app contains pinned Sparkle 2.9.2 and checks only the fork-owned signed
 feed at `https://serge-ml.github.io/HSTracker/appcast.xml`. Automatic checks are
 off by default; use `Check for Updates…` or Preferences → Updates.
 
-Pull requests and default-branch pushes run full core tests plus unsigned Debug
-and Release builds. A successful default-branch CI artifact can then enter the
-protected release workflow for signing, optional notarization, GitHub Release
-publication, and atomic appcast publication. Upstream HSTracker changes arrive
-through review PRs and cannot bypass required checks.
+Pull requests run full core tests plus unsigned Debug and Release builds.
+Default-branch pushes rerun core tests and build the exact unsigned Release
+artifact consumed by the protected release workflow for signing, optional
+notarization, GitHub Release publication, and atomic appcast publication.
+Upstream HSTracker changes arrive through review PRs and cannot bypass required
+checks.
 
 Repository setup, secret scopes, manual workflow controls, rollback, key
 rotation, signature checks, and the required two-version acceptance test are

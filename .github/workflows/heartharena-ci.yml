@@ -7,15 +7,17 @@ on:
       - main
   pull_request:
   workflow_dispatch:
-  schedule:
-    - cron: "17 3 * * *"
+
+concurrency:
+  group: >-
+    hstracker-arena-ci-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 permissions:
   contents: read
 
 jobs:
   core:
-    if: github.event_name != 'schedule'
     runs-on: macos-15
     steps:
       - uses: actions/checkout@v4
@@ -77,7 +79,6 @@ jobs:
           bash -n scripts/verify_fork_update_identity.sh
 
   app:
-    if: github.event_name != 'schedule'
     runs-on: macos-15
     steps:
       - uses: actions/checkout@v4
@@ -89,7 +90,8 @@ jobs:
             -scheme HSTracker \
             -derivedDataPath "$RUNNER_TEMP/DerivedData"
 
-      - name: Build unsigned Debug and Release apps
+      - name: Build unsigned Debug app
+        if: github.event_name != 'push'
         run: |
           xcodebuild build \
             -project HSTracker.xcodeproj \
@@ -99,6 +101,8 @@ jobs:
             -derivedDataPath "$RUNNER_TEMP/DerivedData" \
             CODE_SIGNING_ALLOWED=NO
 
+      - name: Build unsigned Release app
+        run: |
           xcodebuild build \
             -project HSTracker.xcodeproj \
             -scheme HSTracker \
@@ -133,74 +137,3 @@ jobs:
             ${{ runner.temp }}/release-artifact/HSTracker-Arena-unsigned.zip.sha256
           if-no-files-found: error
           retention-days: 14
-
-  parser-health:
-    if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
-    runs-on: macos-15
-    permissions:
-      contents: read
-      issues: write
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Download current public tier list
-        run: |
-          curl \
-            --fail \
-            --location \
-            --compressed \
-            --retry 3 \
-            --user-agent "HSTracker Arena parser health check" \
-            --output "$RUNNER_TEMP/heartharena-tierlist.html" \
-            https://www.heartharena.com/tierlist
-          curl \
-            --fail \
-            --location \
-            --compressed \
-            --retry 3 \
-            --user-agent "HSTracker Arena mapping health check" \
-            --output "$RUNNER_TEMP/cards.json" \
-            https://api.hearthstonejson.com/v1/latest/enUS/cards.json
-
-      - name: Parse and validate current page
-        run: |
-          xcrun swiftc \
-            HSTracker/HearthArenaOverlay/Domain/TierRating.swift \
-            HSTracker/HearthArenaOverlay/Data/HearthArenaTextNormalizer.swift \
-            HSTracker/HearthArenaOverlay/Data/HearthArenaHTMLParser.swift \
-            HSTracker/HearthArenaOverlay/Data/TierListValidator.swift \
-            scripts/heartharena_parser_smoke.swift \
-            -o "$RUNNER_TEMP/heartharena-parser-smoke"
-          "$RUNNER_TEMP/heartharena-parser-smoke" \
-            "$RUNNER_TEMP/heartharena-tierlist.html"
-
-          xcrun swiftc \
-            HSTracker/HearthArenaOverlay/Domain/TierRating.swift \
-            HSTracker/HearthArenaOverlay/Data/HearthArenaTextNormalizer.swift \
-            HSTracker/HearthArenaOverlay/Data/HearthArenaHTMLParser.swift \
-            scripts/heartharena_mapping_smoke.swift \
-            -o "$RUNNER_TEMP/heartharena-mapping-smoke"
-          "$RUNNER_TEMP/heartharena-mapping-smoke" \
-            "$RUNNER_TEMP/heartharena-tierlist.html" \
-            "$RUNNER_TEMP/cards.json"
-
-      - name: Open or update parser health issue
-        if: failure()
-        env:
-          GH_TOKEN: ${{ github.token }}
-        run: |
-          title="[automation] HearthArena parser health check failed"
-          run_url="${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
-          issue_number="$(
-            gh issue list \
-              --state open \
-              --search "$title in:title" \
-              --json number \
-              --jq '.[0].number // empty'
-          )"
-          body="The scheduled live parser check failed. Inspect the workflow run before changing or publishing cached data: $run_url"
-          if [ -n "$issue_number" ]; then
-            gh issue comment "$issue_number" --body "$body"
-          else
-            gh issue create --title "$title" --body "$body"
-          fi
