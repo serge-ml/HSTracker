@@ -256,8 +256,10 @@ class PowerGameStateParser: LogEventParser {
                         let lastCardDrawnId = eventHandler.opponent.hand.sorted(by: { $0.zonePosition > $1.zonePosition }).first?.id ?? -1
                         let lastCardDrawnEntity = eventHandler.entities[lastCardDrawnId]
                         copyOfCardId = lastCardDrawnEntity?.info.copyOfCardId ?? "\(lastCardDrawnId)"
-                    } else if eventHandler.beatrixCardIds.contains(id) {
-                        cardId = eventHandler.beatrixCopiedCard ?? ""
+                    } else if eventHandler.player.beatrixCardIds.contains(id) {
+                        cardId = eventHandler.player.beatrixCopiedCard ?? ""
+                    } else if eventHandler.opponent.beatrixCardIds.contains(id) {
+                        cardId = eventHandler.opponent.beatrixCopiedCard ?? ""
                     }
                 }
 
@@ -295,8 +297,11 @@ class PowerGameStateParser: LogEventParser {
                 }
                 
                 // Beatrix cards are added before mulligan step
-                if let currentBlock, currentBlock.type == "TRIGGER" && eventHandler.gameEntity?[.step] == Step.invalid.rawValue {
-                    eventHandler.beatrixCardIds.insert(id)
+                if let currentBlock, currentBlock.type == "TRIGGER" && eventHandler.gameEntity?[.step] ?? 0 < Step.begin_mulligan.rawValue {
+                    if let beatrixEntity = eventHandler.entities[currentBlock.sourceEntityId] {
+                        let player = beatrixEntity.isControlled(by: eventHandler.player.id) ? eventHandler.player : eventHandler.opponent
+                        player?.beatrixCardIds.insert(id)
+                    }
                 }
                 
                 if let currentBlock = currentBlock, entity.cardId.uppercased().contains("HERO") {
@@ -535,13 +540,16 @@ class PowerGameStateParser: LogEventParser {
                 if let entityId = Int(match.count > 1 ? match[1].value : match[0].value), let entity = eventHandler.entities[entityId] {
                     entity.info.hidden = entity.cardId == CardIds.NonCollectible.Rogue.GaronaHalforcen_KingLlaneToken
                     if currentBlock?.cardId == CardIds.Collectible.Paladin.CommanderBeatrix && currentBlock?.type == "TRIGGER" {
-                        for cId in eventHandler.beatrixCardIds {
+                        let isControlledByPlayer = entity.isControlled(by: eventHandler.player.id)
+
+                        let beatrixCardIds = isControlledByPlayer ? eventHandler.player.beatrixCardIds : eventHandler.opponent.beatrixCardIds
+                        for cId in beatrixCardIds {
                             if let e = eventHandler.entities[cId] {
                                 e.cardId = entity.cardId
                             }
                         }
 
-                        if entity.isControlled(by: eventHandler.player.id) {
+                        if isControlledByPlayer {
                             AppDelegate.instance().coreManager.game.updatePlayerTracker()
                         } else {
                             AppDelegate.instance().coreManager.game.updateOpponentTracker()
@@ -1289,7 +1297,7 @@ class PowerGameStateParser: LogEventParser {
                         case CardIds.Collectible.Neutral.WizenedTruthseeker:
                             if let actionStartingEntity {
                                 if actionStartingEntity.isControlled(by: eventHandler.player.id) {
-                                    eventHandler.handleOpponentHandCostReduction(value: 1)
+                                    eventHandler.resetOpponentHandCostReduction()
                                 }
                             }
                         case CardIds.NonCollectible.Warrior.EntertheLostCity_LatorviusGazeOfTheCityToken:
@@ -1453,6 +1461,21 @@ class PowerGameStateParser: LogEventParser {
                         let summonedDbfIds = eventHandler.entities.values.filter { e in e[GameTag.cardtype] == CardType.minion.rawValue && e[.creator] == nelliesEntity.id && e[.zone] == Zone.play.rawValue }.compactMap { x in x.card.dbfId }
                         if summonedDbfIds.count > 0 {
                             BobsBuddyInvoker.instance(gameId: eventHandler.gameId, turn: eventHandler.turnNumber())?.updateNelliesShipEnchantment(summonedDbfIds, nelliesEntity.id, nelliesEntity.isControlled(by: eventHandler.player.id))
+                        }
+                    }
+                }
+                if currentBlock.cardId == CardIds.NonCollectible.Neutral.Magnanimoose && currentBlock.triggerKeyword == "DEATHRATTLE" {
+                    if let magnanimooseEntity = eventHandler.entities[currentBlock.sourceEntityId] {
+                        let summonedEntities = eventHandler.entities.values
+                            .filter { e in
+                                e[GameTag.cardtype] == CardType.minion.rawValue &&
+                                e[GameTag.creator] == magnanimooseEntity.id &&
+                                e[GameTag.zone] == Zone.play.rawValue
+                            }
+
+                        if summonedEntities.count > 0 {
+                            BobsBuddyInvoker.instance(gameId: eventHandler.gameId, turn: eventHandler.turnNumber())?
+                                .updateMagnanimooseSummonPoolDuos(summonedEntities, magnanimooseEntity.id, magnanimooseEntity.isControlled(by: eventHandler.player.id))
                         }
                     }
                 }
