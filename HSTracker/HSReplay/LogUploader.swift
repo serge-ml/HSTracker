@@ -121,16 +121,18 @@ class LogUploader {
 
                     let gt = metaData?.metaData.game_type
                     if gt != BnetGameType.bgt_battlegrounds.rawValue && gt != BnetGameType.bgt_battlegrounds_friendly.rawValue && gt != BnetGameType.bgt_mercenaries_pve.rawValue && gt != BnetGameType.bgt_mercenaries_pvp.rawValue && gt != BnetGameType.bgt_mercenaries_friendly.rawValue && gt != BnetGameType.bgt_mercenaries_pve_coop.rawValue {
-                        guard let statId = statId, let deckId = metaData?.metaData.player1?.deck_id ?? metaData?.metaData.player2?.deck_id,
-                              let existing = RealmHelper.getGameStat(deckId: deckId, with: statId)  else {
-                                        logger.error("Can not update statistic")
-                                        completion(.failed(error: "Can not update statistic"))
-                                        return
-                            }
+                        if let statId = statId,
+                           let deckId = metaData?.metaData.player1?.deck_id ?? metaData?.metaData.player2?.deck_id,
+                           let existing = RealmHelper.getGameStat(deckId: deckId, with: statId) {
                             RealmHelper.update(stat: existing, hsReplayId: uploadShortId)
+                        } else {
+                            // The replay upload itself succeeded. Missing local deck statistics should not
+                            // prevent consumers such as HS Guru from receiving the returned replay URL.
+                            logger.error("Can not update local statistic with HSReplay id")
+                        }
                     }
             
-                    completion(.successful(replayId: uploadShortId))
+                    completion(.successful(replayId: uploadShortId, replayURL: replayUrl))
         }
     }
 }

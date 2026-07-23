@@ -2085,6 +2085,8 @@ class Game: NSObject, PowerEventHandler {
 			logger.error("Error: could not generate endgame statistics")
 			return
 		}
+
+        let hsGuruPayload = generateHSGuruPayload(stats: currentGameStats)
 		
 		logger.verbose("currentGameStats: \(currentGameStats), "
 			+ "handledGameEnd: \(self.handledGameEnd)")
@@ -2158,7 +2160,7 @@ class Game: NSObject, PowerEventHandler {
             return
         }
 
-		self.syncStats(logLines: self.powerLog, stats: currentGameStats)
+		self.syncStats(logLines: self.powerLog, stats: currentGameStats, hsGuruPayload: hsGuruPayload)
         
         if isBattlegroundsMatch() {
             recordBattlegroundsGame()
@@ -2185,11 +2187,147 @@ class Game: NSObject, PowerEventHandler {
         }
     }
 
-    private func syncStats(logLines: [LogLine], stats: InternalGameStats) {
+    private func generateHSGuruPayload(stats: InternalGameStats) -> HSGuruGamePayload? {
+        guard Settings.hsGuruUploadMatches, !gameId.isBlank else {
+            return nil
+        }
+
+        let result: String
+        switch stats.result {
+        case .win:
+            result = "WIN"
+        case .loss:
+            result = "LOSS"
+        case .draw:
+            result = "DRAW"
+        case .unknown:
+            return nil
+        }
+
+        func trackedCardId(entity: Entity) -> String {
+            if let originalCardId = entity.info.originalCardId, !originalCardId.isBlank {
+                return originalCardId
+            }
+            return entity.cardId
+        }
+
+        func cardReference(entity: Entity) -> HSGuruCardReference? {
+            let cardId = trackedCardId(entity: entity)
+            guard !cardId.isBlank else {
+                return nil
+            }
+            let dbfId = Cards.by(cardId: cardId)?.dbfId ?? 0
+            return HSGuruCardReference(cardId: cardId, cardDbfId: dbfId > 0 ? dbfId : nil)
+        }
+
+        func playedCard(entity: Entity) -> HSGuruPlayedCard? {
+            let cardId = trackedCardId(entity: entity)
+            guard !cardId.isBlank else {
+                return nil
+            }
+            let wasCreated = entity.info.created || entity.info.stolen
+            let creatorId = entity.info.getCreatorId()
+            return HSGuruPlayedCard(
+                cardId: cardId,
+                turn: entity.info.turnPlayed ?? entity.info.turn,
+                createdBy: wasCreated ? (creatorId > 0 ? String(creatorId) : HSGuruGamePayload.source) : nil
+            )
+        }
+
+        let cardsBeforeMulligan = _mulliganState?.offeredCards.compactMap(cardReference)
+        let cardsAfterMulligan = _mulliganState?.finalCardsInHand.compactMap(cardReference)
+
+        let cardsDrawn = entities.values.compactMap { entity -> HSGuruDrawnCard? in
+            let cardId = trackedCardId(entity: entity)
+            let startedInPlayerDeck = entity.info.originalZone == .deck
+                && (entity.info.originalController == player.id || entity.isControlled(by: player.id))
+            guard startedInPlayerDeck, !entity.info.created, !entity.info.stolen,
+                  entity.info.turn > 0, !cardId.isBlank else {
+                return nil
+            }
+            let dbfId = Cards.by(cardId: cardId)?.dbfId ?? 0
+            return HSGuruDrawnCard(
+                cardId: cardId,
+                cardDbfId: dbfId > 0 ? dbfId : nil,
+                turn: entity.info.turn
+            )
+        }.sorted {
+            $0.turn == $1.turn ? $0.cardId < $1.cardId : $0.turn < $1.turn
+        }
+
+        let playerCardsPlayed = player.cardsPlayedThisMatch.compactMap(playedCard).sorted {
+            $0.turn == $1.turn ? $0.cardId < $1.cardId : $0.turn < $1.turn
+        }
+        let opponentCardsPlayed = opponent.cardsPlayedThisMatch.compactMap(playedCard).sorted {
+            $0.turn == $1.turn ? $0.cardId < $1.cardId : $0.turn < $1.turn
+        }
+
+        func nonEmpty<T>(_ values: [T]?) -> [T]? {
+            guard let values, !values.isEmpty else {
+                return nil
+            }
+            return values
+        }
+
+        let localBattleTag = matchInfo?.localPlayer.battleTag
+            ?? MirrorHelper.getBattleTag()
+            ?? (stats.playerName.contains("#") ? stats.playerName : nil)
+        let deckcode = currentDeck?.shortid.isBlank == false ? currentDeck?.shortid : nil
+
+        let playerPayload = HSGuruPlayerPayload(
+            battleTag: localBattleTag,
+            rank: stats.rank > 0 ? stats.rank : nil,
+            legendRank: stats.legendRank > 0 ? stats.legendRank : nil,
+            deckcode: deckcode,
+            playerClass: stats.playerHero.rawValue.uppercased(),
+            cardsBeforeMulligan: nonEmpty(cardsBeforeMulligan),
+            cardsInHandAfterMulligan: nonEmpty(cardsAfterMulligan),
+            cardsDrawnFromInitialDeck: nonEmpty(cardsDrawn),
+            cardsPlayed: playerCardsPlayed
+        )
+        let opponentPayload = HSGuruPlayerPayload(
+            battleTag: nil,
+            rank: stats.opponentRank > 0 ? stats.opponentRank : nil,
+            legendRank: stats.opponentLegendRank > 0 ? stats.opponentLegendRank : nil,
+            deckcode: nil,
+            playerClass: stats.opponentHero.rawValue.uppercased(),
+            cardsBeforeMulligan: nil,
+            cardsInHandAfterMulligan: nil,
+            cardsDrawnFromInitialDeck: nil,
+            cardsPlayed: opponentCardsPlayed
+        )
+
+        return HSGuruGamePayload(
+            gameId: gameId,
+            gameType: stats.gameType.rawValue,
+            format: stats.format?.toFormatType().rawValue,
+            result: result,
+            region: Region.toBnetRegion(region: currentRegion),
+            durationSeconds: max(0, Int(stats.endTime.timeIntervalSince(stats.startTime))),
+            turns: max(0, stats.turns),
+            replayURL: nil,
+            mode: stats.gameMode.rawValue,
+            playerHasCoin: stats.coin,
+            source: HSGuruGamePayload.source,
+            sourceVersion: Version.buildVersion,
+            player: playerPayload,
+            opponent: opponentPayload
+        )
+    }
+
+    private func syncStats(
+        logLines: [LogLine],
+        stats: InternalGameStats,
+        hsGuruPayload: HSGuruGamePayload?
+    ) {
 
         guard currentGameMode != .practice && currentGameMode != .none && currentGameMode != .spectator else {
             logger.info("Game was in \(currentGameMode), don't send to third-party")
             return
+        }
+
+        if let hsGuruPayload {
+            HSGuruUploader.shared.submit(hsGuruPayload)
         }
 
         if Settings.hsReplaySynchronizeMatches && (
@@ -2225,7 +2363,10 @@ class Game: NSObject, PowerEventHandler {
                 
                 LogUploader.upload(logLines: logLines, buildNumber: self.buildNumber,
                                    metaData: (uploadMetaData, statId)) { result in
-                    if case UploadResult.successful(let replayId) = result {
+                    if case UploadResult.successful(let replayId, let replayURL) = result {
+                        if let hsGuruPayload {
+                            HSGuruUploader.shared.submit(hsGuruPayload.adding(replayURL: replayURL))
+                        }
                         if stats.gameMode == .battlegrounds {
                             Sentry.sendQueuedBobsBuddyEvents(shortId: replayId)
                         }

@@ -961,6 +961,42 @@
         }
       }
     },
+    "hsg-uru-cel.title" : {
+      "comment" : "Class = \"NSButtonCell\"; title = \"Share completed games and decks with HS Guru\"; ObjectID = \"hsg-uru-cel\";",
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Share completed games and decks with HS Guru"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Отправлять завершённые игры и колоды в HS Guru"
+          }
+        }
+      }
+    },
+    "hsg-uru-upl.ibShadowedToolTip" : {
+      "comment" : "Class = \"NSButton\"; ibShadowedToolTip = \"Sends your BattleTag, deck, result, card history, and an HSReplay link after each completed game\"; ObjectID = \"hsg-uru-upl\";",
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Sends your BattleTag, deck, result, card history, and an HSReplay link after each completed game"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "После каждой завершённой игры отправляет ваш BattleTag, колоду, результат, историю карт и ссылку HSReplay"
+          }
+        }
+      }
+    },
     "Yit-xi-gbj.ibShadowedToolTip" : {
       "comment" : "Class = \"NSButton\"; ibShadowedToolTip = \"Notifications are only visible if Hearthstone is not focused\"; ObjectID = \"Yit-xi-gbj\";",
       "extractionState" : "extracted_with_value",
