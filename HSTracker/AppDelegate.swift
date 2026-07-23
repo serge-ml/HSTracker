@@ -104,6 +104,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSUserNotificationCenterDele
         
         // create folders in file system
         Paths.initDirs()
+        HSGuruUploader.shared.resumePendingUploads()
         
         // initialize realm's database
         RealmHelper.initRealm(destination: Paths.HSTracker)

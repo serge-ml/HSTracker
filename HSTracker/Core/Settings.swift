@@ -504,6 +504,10 @@ final class Settings {
     @UserDefault(key: Settings.hsreplay_auto_synchronize_mercenaries_matches, defaultValue: true)
     static var hsReplayUploadMercenariesMatches: Bool
 
+    // MARK: - HS Guru
+    @UserDefault(key: Settings.hsguru_upload_matches, defaultValue: false)
+    static var hsGuruUploadMatches: Bool
+
     @UserDefault(key: Settings.theme_token, defaultValue: "dark")
     static var theme: String
 
@@ -703,4 +707,7 @@ extension Settings {
     static let hsreplay_auto_synchronize_battlegrounds_matches = "hsreplay_auto_synchronize_battlegrounds_matches"
     static let hsreplay_auto_synchronize_duels_matches = "hsreplay_auto_synchronize_duels_matches"
     static let hsreplay_auto_synchronize_mercenaries_matches = "hsreplay_auto_synchronize_mercenaries_matches"
+
+    // MARK: - HS Guru related preferences
+    static let hsguru_upload_matches = "hsguru_upload_matches"
 }

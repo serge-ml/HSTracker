@@ -15,6 +15,7 @@
                 <outlet property="notifyTurnStart" destination="c8y-VJ-p2U" id="B8P-nb-zWn"/>
                 <outlet property="preferGoldenCards" destination="qet-kh-hRB" id="bDD-3D-qmM"/>
                 <outlet property="saveReplays" destination="lku-8T-sZE" id="GRO-sB-dzb"/>
+                <outlet property="shareGamesWithHSGuru" destination="hsg-uru-upl" id="hsg-out-let"/>
                 <outlet property="useToastNotifications" destination="ONL-4k-EMK" id="ffy-qM-KpE"/>
                 <outlet property="view" destination="c22-O7-iKe" id="g0K-Jv-9qq"/>
             </connections>
@@ -22,11 +23,11 @@
         <customObject id="-1" userLabel="First Responder" customClass="FirstResponder"/>
         <customObject id="-3" userLabel="Application" customClass="NSObject"/>
         <stackView distribution="fill" orientation="vertical" alignment="leading" spacing="10" horizontalStackHuggingPriority="250" verticalStackHuggingPriority="249.99998474121094" detachesHiddenViews="YES" id="c22-O7-iKe">
-            <rect key="frame" x="0.0" y="0.0" width="460" height="238"/>
+            <rect key="frame" x="0.0" y="0.0" width="460" height="264"/>
             <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
             <subviews>
                 <button toolTip="Notifications are only visible if Hearthstone is not focused" verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="08B-rI-8LA">
-                    <rect key="frame" x="20" y="202" width="420" height="16"/>
+                    <rect key="frame" x="20" y="228" width="420" height="16"/>
                     <buttonCell key="cell" type="check" title="Notify me when the game starts" bezelStyle="regularSquare" imagePosition="left" state="on" inset="2" id="aaX-mu-c31">
                         <behavior key="behavior" changeContents="YES" doesNotDimImage="YES" lightByContents="YES"/>
                         <font key="font" metaFont="system"/>
@@ -36,7 +37,7 @@
                     </connections>
                 </button>
                 <button toolTip="Notifications are only visible if Hearthstone is not focused" verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="c8y-VJ-p2U">
-                    <rect key="frame" x="20" y="176" width="420" height="16"/>
+                    <rect key="frame" x="20" y="202" width="420" height="16"/>
                     <buttonCell key="cell" type="check" title="Notify me when my turn starts" bezelStyle="regularSquare" imagePosition="left" state="on" inset="2" id="Rbw-dw-oAI">
                         <behavior key="behavior" changeContents="YES" doesNotDimImage="YES" lightByContents="YES"/>
                         <font key="font" metaFont="system"/>
@@ -46,7 +47,7 @@
                     </connections>
                 </button>
                 <button toolTip="Notifications are only visible if Hearthstone is not focused" verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="Yit-xi-gbj">
-                    <rect key="frame" x="20" y="150" width="420" height="16"/>
+                    <rect key="frame" x="20" y="176" width="420" height="16"/>
                     <buttonCell key="cell" type="check" title="Notify me when my opponent concedes" bezelStyle="regularSquare" imagePosition="left" state="on" inset="2" id="GhP-a6-Faw">
                         <behavior key="behavior" changeContents="YES" doesNotDimImage="YES" lightByContents="YES"/>
                         <font key="font" metaFont="system"/>
@@ -56,7 +57,7 @@
                     </connections>
                 </button>
                 <button toolTip="Notifications are only visible if Hearthstone is not focused" verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="hzK-vu-1RX">
-                    <rect key="frame" x="20" y="124" width="420" height="16"/>
+                    <rect key="frame" x="20" y="150" width="420" height="16"/>
                     <buttonCell key="cell" type="check" title="Close HSTracker when Hearthstone closes" bezelStyle="regularSquare" imagePosition="left" state="on" inset="2" id="oQm-3D-WOn">
                         <behavior key="behavior" changeContents="YES" doesNotDimImage="YES" lightByContents="YES"/>
                         <font key="font" metaFont="system"/>
@@ -66,13 +67,23 @@
                     </connections>
                 </button>
                 <button verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="lku-8T-sZE">
-                    <rect key="frame" x="20" y="98" width="420" height="16"/>
+                    <rect key="frame" x="20" y="124" width="420" height="16"/>
                     <buttonCell key="cell" type="check" title="Save replays" bezelStyle="regularSquare" imagePosition="left" state="on" inset="2" id="vod-AA-O2m">
                         <behavior key="behavior" changeContents="YES" doesNotDimImage="YES" lightByContents="YES"/>
                         <font key="font" metaFont="system"/>
                     </buttonCell>
                     <connections>
                         <action selector="checkboxClicked:" target="-2" id="9fs-Sq-3TA"/>
+                    </connections>
+                </button>
+                <button toolTip="Sends your BattleTag, deck, result, card history, and an HSReplay link after each completed game" verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="hsg-uru-upl">
+                    <rect key="frame" x="20" y="98" width="420" height="16"/>
+                    <buttonCell key="cell" type="check" title="Share completed games and decks with HS Guru" bezelStyle="regularSquare" imagePosition="left" inset="2" id="hsg-uru-cel">
+                        <behavior key="behavior" changeContents="YES" doesNotDimImage="YES" lightByContents="YES"/>
+                        <font key="font" metaFont="system"/>
+                    </buttonCell>
+                    <connections>
+                        <action selector="checkboxClicked:" target="-2" id="hsg-uru-act"/>
                     </connections>
                 </button>
                 <button verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="9ux-qy-79X">
@@ -113,6 +124,7 @@
                 <constraint firstItem="Yit-xi-gbj" firstAttribute="leading" secondItem="c22-O7-iKe" secondAttribute="leading" constant="20" symbolic="YES" id="gen-l2-Yit"/>
                 <constraint firstItem="hzK-vu-1RX" firstAttribute="leading" secondItem="c22-O7-iKe" secondAttribute="leading" constant="20" symbolic="YES" id="gen-l3-hzK"/>
                 <constraint firstItem="lku-8T-sZE" firstAttribute="leading" secondItem="c22-O7-iKe" secondAttribute="leading" constant="20" symbolic="YES" id="gen-l4-lku"/>
+                <constraint firstItem="hsg-uru-upl" firstAttribute="leading" secondItem="c22-O7-iKe" secondAttribute="leading" constant="20" symbolic="YES" id="gen-l4-hsg"/>
                 <constraint firstItem="9ux-qy-79X" firstAttribute="leading" secondItem="c22-O7-iKe" secondAttribute="leading" constant="20" symbolic="YES" id="gen-l5-9ux"/>
                 <constraint firstItem="qet-kh-hRB" firstAttribute="leading" secondItem="c22-O7-iKe" secondAttribute="leading" constant="20" symbolic="YES" id="gen-l6-qet"/>
                 <constraint firstItem="ONL-4k-EMK" firstAttribute="leading" secondItem="c22-O7-iKe" secondAttribute="leading" constant="20" symbolic="YES" id="gen-l7-ONL"/>
@@ -121,6 +133,7 @@
                 <constraint firstAttribute="trailing" secondItem="Yit-xi-gbj" secondAttribute="trailing" constant="20" symbolic="YES" id="gen-t2-Yit"/>
                 <constraint firstAttribute="trailing" secondItem="hzK-vu-1RX" secondAttribute="trailing" constant="20" symbolic="YES" id="gen-t3-hzK"/>
                 <constraint firstAttribute="trailing" secondItem="lku-8T-sZE" secondAttribute="trailing" constant="20" symbolic="YES" id="gen-t4-lku"/>
+                <constraint firstAttribute="trailing" secondItem="hsg-uru-upl" secondAttribute="trailing" constant="20" symbolic="YES" id="gen-t4-hsg"/>
                 <constraint firstAttribute="trailing" secondItem="9ux-qy-79X" secondAttribute="trailing" constant="20" symbolic="YES" id="gen-t5-9ux"/>
                 <constraint firstAttribute="trailing" secondItem="qet-kh-hRB" secondAttribute="trailing" constant="20" symbolic="YES" id="gen-t6-qet"/>
                 <constraint firstAttribute="trailing" secondItem="ONL-4k-EMK" secondAttribute="trailing" constant="20" symbolic="YES" id="gen-t7-ONL"/>
@@ -134,8 +147,10 @@
                 <integer value="1000"/>
                 <integer value="1000"/>
                 <integer value="1000"/>
+                <integer value="1000"/>
             </visibilityPriorities>
             <customSpacing>
+                <real value="3.4028234663852886e+38"/>
                 <real value="3.4028234663852886e+38"/>
                 <real value="3.4028234663852886e+38"/>
                 <real value="3.4028234663852886e+38"/>

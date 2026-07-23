@@ -24,6 +24,7 @@ class GeneralPreferences: PreferencePaneController, PreferencePane {
     @IBOutlet var enableDockBadge: NSButton!
     @IBOutlet var preferGoldenCards: NSButton!
     @IBOutlet var useToastNotifications: NSButton!
+    @IBOutlet var shareGamesWithHSGuru: NSButton!
 
     override func viewWillAppear() {
         super.viewWillAppear()
@@ -40,6 +41,7 @@ class GeneralPreferences: PreferencePaneController, PreferencePane {
         enableDockBadge.state = Settings.showAppHealth ? .on : .off
         preferGoldenCards.state = Settings.preferGoldenCards ? .on : .off
         useToastNotifications.state = Settings.useToastNotification ? .on : .off
+        shareGamesWithHSGuru.state = Settings.hsGuruUploadMatches ? .on : .off
     }
 
     @IBAction func checkboxClicked(_ sender: NSButton) {
@@ -60,6 +62,13 @@ class GeneralPreferences: PreferencePaneController, PreferencePane {
             Settings.preferGoldenCards = preferGoldenCards.state == .on
         } else if sender == useToastNotifications {
             Settings.useToastNotification = useToastNotifications.state == .on
+        } else if sender == shareGamesWithHSGuru {
+            Settings.hsGuruUploadMatches = shareGamesWithHSGuru.state == .on
+            if Settings.hsGuruUploadMatches {
+                HSGuruUploader.shared.resumePendingUploads()
+            } else {
+                HSGuruUploader.shared.cancelAndClearPendingUploads()
+            }
         }
     }
 

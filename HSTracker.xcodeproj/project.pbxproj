@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		C0D6C0010000000000000001 /* HSGuru.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0D6B0010000000000000001 /* HSGuru.swift */; };
 		C0D4C0010000000000000001 /* UpdateController.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0D4B0010000000000000001 /* UpdateController.swift */; };
 		C0D4C0010000000000000002 /* UpdatePreferencesController.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0D4B0010000000000000002 /* UpdatePreferencesController.swift */; };
 		1C132F821DBA24C1002B1BF2 /* AppHealth.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1C132F811DBA24C1002B1BF2 /* AppHealth.swift */; };
@@ -1564,6 +1565,7 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		C0D6B0010000000000000001 /* HSGuru.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HSGuru.swift; sourceTree = "<group>"; };
 		C0D4B0010000000000000001 /* UpdateController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UpdateController.swift; sourceTree = "<group>"; };
 		C0D4B0010000000000000002 /* UpdatePreferencesController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UpdatePreferencesController.swift; sourceTree = "<group>"; };
 		1C132F811DBA24C1002B1BF2 /* AppHealth.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = AppHealth.swift; sourceTree = "<group>"; };
@@ -3550,6 +3552,7 @@
 		43C567EA1D5E309600451B6F /* HSReplay */ = {
 			isa = PBXGroup;
 			children = (
+				C0D6B0010000000000000001 /* HSGuru.swift */,
 				B8CE65D2294FE8C200E8D168 /* Data */,
 				43C567EB1D5E314500451B6F /* HSReplay.swift */,
 				43C567FE1D5E4F9700451B6F /* HSReplayAPI.swift */,
@@ -5332,6 +5335,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				C0D6C0010000000000000001 /* HSGuru.swift in Sources */,
 				C0D4C0010000000000000001 /* UpdateController.swift in Sources */,
 				C0D4C0010000000000000002 /* UpdatePreferencesController.swift in Sources */,
 				C0D3C0010000000000000001 /* ArenaOffer.swift in Sources */,

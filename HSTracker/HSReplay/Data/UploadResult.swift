@@ -10,7 +10,7 @@ import Foundation
 
 enum UploadResult {
     case failed(error: String)
-    case successful(replayId: String)
+    case successful(replayId: String, replayURL: String)
 }
 
 enum CollectionUploadResult {
