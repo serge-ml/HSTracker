@@ -136,7 +136,18 @@ enum ArenaOverlayLayout {
                 size: badgeSize
             )
         }
-        return topFrames + bottomFrames
+        // MirrorArenaInfo.redraftDeck enumerates the five visible cards by
+        // column: left top/bottom, center, then right top/bottom. Keep the
+        // frames in that same physical-slot order so ArenaDiscardTracker can
+        // preserve a badge's position when cards move between the deck and
+        // the discard area.
+        return [
+            topFrames[0],
+            bottomFrames[0],
+            topFrames[1],
+            topFrames[2],
+            bottomFrames[1]
+        ]
     }
 
 }
