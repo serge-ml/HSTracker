@@ -4,22 +4,22 @@ IMPORTANT: This file was signed by Sparkle. Any modifications to this file requi
     <channel>
         <title>HSTracker Arena</title>
         <item>
-            <title>3.6.1</title>
-            <pubDate>Thu, 23 Jul 2026 17:37:29 +0000</pubDate>
-            <link>https://github.com/serge-ml/HSTracker/releases/tag/arena-v3.6.1-b100042</link>
-            <sparkle:version>100042</sparkle:version>
-            <sparkle:shortVersionString>3.6.1</sparkle:shortVersionString>
+            <title>3.6.2</title>
+            <pubDate>Sun, 26 Jul 2026 12:50:58 +0000</pubDate>
+            <link>https://github.com/serge-ml/HSTracker/releases/tag/arena-v3.6.2-b100044</link>
+            <sparkle:version>100044</sparkle:version>
+            <sparkle:shortVersionString>3.6.2</sparkle:shortVersionString>
             <sparkle:minimumSystemVersion>10.14</sparkle:minimumSystemVersion>
-            <description sparkle:format="markdown"><![CDATA[# HSTracker Arena 3.6.1 (100042)
+            <description sparkle:format="markdown"><![CDATA[# HSTracker Arena 3.6.2 (100044)
 
-- Source commit: `fe0bfb230ae3546b6831855a379c6be5e250b893`
-- CI run: 29992429276
+- Source commit: `52e1642004fd0165beea15c71305aa966a750279`
+- CI run: 30202481124
 - Update channel: HSTracker Arena fork
 ]]></description>
-            <enclosure url="https://github.com/serge-ml/HSTracker/releases/download/arena-v3.6.1-b100042/HSTracker-Arena-3.6.1-100042.zip" length="82877266" type="application/octet-stream" sparkle:edSignature="mVYMP+BpkIxY1Mb5/dx28fdcfnHz0fcA+7HJAssNptYv+Hr4e62vuU1OmM0J2ymaNbWQ7rqpq4yW8f9lsFzvAg=="></enclosure>
+            <enclosure url="https://github.com/serge-ml/HSTracker/releases/download/arena-v3.6.2-b100044/HSTracker-Arena-3.6.2-100044.zip" length="82914535" type="application/octet-stream" sparkle:edSignature="F6dgkoJcV8BZ3zIFyExZPa8cvRrgcuyamSpFkUYzCoarO/PZ0TRPraMutNycq47lcuNskVQfEnF3+lj+1rXKDQ=="></enclosure>
         </item>
     </channel>
 </rss><!-- sparkle-signatures:
-edSignature: zEKtzsnCKc89J+S9A12CrsVgTx9oGfwWPJEF85HGOe0YyRluPKJHzW2LLYlx0PVgcWlCItrsWquJOUlbZcsbAw==
+edSignature: bpSICIli99Z2/94njBK3pFrwCzBVWg7vJ8EnqzSielnNg8Ku/Cp+0X68DRK1QaBhh1k1fBORPD6w0/vRLIULAA==
 length: 1414
 -->
