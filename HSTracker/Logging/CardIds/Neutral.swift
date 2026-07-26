@@ -1146,5 +1146,13 @@ extension CardIds.NonCollectible {
         static let DrBoomsMonster = "BG31_176"
         static let DrBoomsMonster_DrBoomsMonster1 = "BG31_176_G"
         static let Magnanimoose = "BGDUO_105"
+        static let ForestLordCenarius_Malorne1 = "BG32_HERO_001_Buddy"
+        static let ForestLordCenarius_Malorne2 = "BG32_HERO_001_Buddy_G"
+        static let BringInTheBuddies = "BG27_Anomaly_810"
+        static let ForestLordCenarius_PowerOfAncients = "BG32_HERO_001_Buddye"
+        static let TimewarpedMagnanimoose_TimewarpedMagnanimoose = "BG34_Giant_619_G"
+        static let TimewarpedNelliesShipToken2 = "BG34_Giant_074t_G"
+        static let Magnanimoose_Magnanimoose = "BGDUO_105_G"
+        static let Sandy_Sandy = "BGDUO_125_G"
     }
 }
