@@ -64,13 +64,19 @@ enum HearthArenaLayoutSmoke {
                     description: "redraft discard badges"
                 )
                 try require(
-                    redraftBadges[3].midX < redraftBadges[4].midX,
-                    "lower redraft badges preserve card order"
+                    redraftBadges[0].midX == redraftBadges[1].midX &&
+                        redraftBadges[0].midY > redraftBadges[1].midY,
+                    "left redraft column follows HearthMirror slot order"
                 )
                 try require(
-                    redraftBadges[3].midY < redraftBadges[0].midY &&
-                        redraftBadges[4].midY < redraftBadges[2].midY,
-                    "lower redraft badges follow the lower cards"
+                    redraftBadges[3].midX == redraftBadges[4].midX &&
+                        redraftBadges[3].midY > redraftBadges[4].midY,
+                    "right redraft column follows HearthMirror slot order"
+                )
+                try require(
+                    redraftBadges[0].midX < redraftBadges[2].midX &&
+                        redraftBadges[2].midX < redraftBadges[3].midX,
+                    "redraft columns remain ordered left to right"
                 )
 
             }
@@ -97,9 +103,17 @@ enum HearthArenaLayoutSmoke {
             verticalOffset: 0
         )
         try require(
-            abs(referenceRedraftBadges[3].midY - 129.08) < 0.1 &&
+            abs(referenceRedraftBadges[1].midY - 129.08) < 0.1 &&
                 abs(referenceRedraftBadges[4].midY - 129.08) < 0.1,
-            "lower redraft badges align with the two lower cards"
+            "HearthMirror lower-slot badges align with the lower cards"
+        )
+        try require(
+            abs(referenceRedraftBadges[0].midX - 338.91) < 0.1 &&
+                abs(referenceRedraftBadges[1].midX - 338.91) < 0.1 &&
+                abs(referenceRedraftBadges[2].midX - 572.48) < 0.1 &&
+                abs(referenceRedraftBadges[3].midX - 806.05) < 0.1 &&
+                abs(referenceRedraftBadges[4].midX - 806.05) < 0.1,
+            "redraft frames match HearthMirror's column-major card order"
         )
 
         try require(
