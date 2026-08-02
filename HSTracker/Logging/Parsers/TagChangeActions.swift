@@ -279,7 +279,7 @@ struct TagChangeActions {
         // transformed minion: the minion in PLAY copies from a SETASIDE entity
         if let currentBlock = AppDelegate.instance().coreManager.logReaderManager.powerGameStateParser.currentBlock, eventHandler.currentGameMode == GameMode.battlegrounds && currentBlock.cardId == CardIds.NonCollectible.Neutral.FlobbidinousFloop_GloriousGloop && entity.isMinion && entity.isInZone(zone: .play), let floopCopySource = eventHandler.entities[value],
             floopCopySource.isInZone(zone: .setaside) {
-            BobsBuddyInvoker.instance(gameId: eventHandler.gameId, turn: eventHandler.turnNumber())?.updateFlobbidinousFloopTransformDuos(entity)
+            BobsBuddyInvoker.instance(gameId: eventHandler.gameId, turn: eventHandler.turnNumber())?.updateFlobbidinousFloopTransformDuos(entity, currentBlock.sourceEntityId)
         }
         
         if let currentBlock = AppDelegate.instance().coreManager.logReaderManager.powerGameStateParser.currentBlock, eventHandler.currentGameMode == GameMode.battlegrounds && (currentBlock.cardId == CardIds.NonCollectible.Neutral.SummoningSphere || currentBlock.cardId == CardIds.NonCollectible.Neutral.LesserTrinket) && entity.isMinion &&
@@ -538,6 +538,13 @@ struct TagChangeActions {
         guard let entity = eventHandler.entities[value] else {
             return
         }
+        
+        // Signal to flush AutoAssembler deathrattles observed during a sequence of Deathrattle Blocks
+        if BobsBuddyInvoker.currentCombatHasPendingAutoAssemblerObservations {
+            BobsBuddyInvoker.instance(gameId: eventHandler.gameId, turn: eventHandler.turnNumber())?
+                .flushAndUpdateObservedAutoAssemblerDeathrattlesAsync()
+        }
+        
         if entity.isHero {
             logger.debug("Saw hero attack from \(entity.cardId)")
 

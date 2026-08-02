@@ -304,6 +304,28 @@ class PowerGameStateParser: LogEventParser {
                     }
                 }
                 
+                // Used to detect and update hidden magnetized AutoAssembler deathrattles
+                if  // short-circuit on CardId to minimize frequency of this check
+                    (cardId == CardIds.NonCollectible.Neutral.AncestralAutomaton || cardId == CardIds.NonCollectible.Neutral.AncestralAutomaton_AncestralAutomaton)
+                        && eventHandler.currentGameMode == GameMode.battlegrounds,
+                    let currentBlock,
+                    currentBlock.type == "TRIGGER" && currentBlock.triggerKeyword == "DEATHRATTLE",
+                    let deadMinion = eventHandler.entities[currentBlock.sourceEntityId],
+                    deadMinion.isMinion {
+                    let race = deadMinion[GameTag.cardrace]
+                    if race == Race.lookup(Race.mechanical) || race == Race.lookup(Race.all) {
+                        // Extra-deathrattles (e.g., Titus Rivendare) are tracked on the controlling player entity.
+                        let controller = deadMinion[GameTag.controller]
+                        let controllerEntity = controller == eventHandler.player.id ? eventHandler.playerEntity
+                        : controller == eventHandler.opponent.id ? eventHandler.opponentEntity
+                        : eventHandler.entities.values.filter { e in e[.player_id] == controller }.sorted(by: { $0.id < $1.id }).first
+                        let extraDeathrattles = controllerEntity?[GameTag.extra_deathrattles_additional] ?? 0
+
+                        BobsBuddyInvoker.instance(gameId: eventHandler.gameId, turn: eventHandler.turnNumber())?
+                            .observeMagnetizedAutoAssemblerDeathrattles(sourceEntityId: currentBlock.sourceEntityId, extraDeathrattles: extraDeathrattles)
+                    }
+                }
+                
                 if let currentBlock = currentBlock, entity.cardId.uppercased().contains("HERO") {
                     currentBlock.hasFullEntityHeroPackets = true
                 }
@@ -1485,6 +1507,26 @@ class PowerGameStateParser: LogEventParser {
                         }).min(by: { $0.id < $1.id }) {
                             BobsBuddyInvoker.instance(gameId: eventHandler.gameId, turn: eventHandler.turnNumber())?.updateLockAndLoadHeroPower(attachedEntity: summonedEntity, isOpponent: lockAndLoadEntity.isControlled(by: eventHandler.opponent.id))
                         }
+                    }
+                }
+                // Glorious Gloop's Start of Combat trigger block always runs, but it transforms nothing when the
+                // teammate has no minion to copy. A transform consumes the chosen minion's "In the Gloop"
+                // enchantment (it leaves PLAY inside this block), so an enchantment still in PLAY on a minion
+                // still in PLAY when the block ends means that minion was left unchanged.
+                if currentBlock.cardId == CardIds.NonCollectible.Neutral.FlobbidinousFloop_GloriousGloop, let floopEntity =  eventHandler.entities[currentBlock.sourceEntityId] {
+                    let noTransform = eventHandler.entities.values.any({ e in
+                        if e.cardId == CardIds.NonCollectible.Neutral.FlobbidinousFloop_InTheGloop
+                            && e.isInPlay
+                            && e.isControlled(by: floopEntity[GameTag.controller]) {
+                            if let chosen = eventHandler.entities[e[GameTag.attached]], chosen.isMinion && chosen.isInPlay {
+                                return true
+                            }
+                        }
+                        return false
+                    })
+                    
+                    if noTransform {
+                        BobsBuddyInvoker.instance(gameId: eventHandler.gameId, turn: eventHandler.turnNumber())?.updateFlobbidinousFloopConfirmedNoTransformDuos(currentBlock.sourceEntityId)
                     }
                 }
             }
