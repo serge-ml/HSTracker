@@ -141,6 +141,8 @@ class Game: NSObject, PowerEventHandler {
     var battlegroundsBuddiesEnabled: Bool {
         return gameEntity?[.bacon_buddy_enabled] ?? 0 > 0
     }
+    
+    var battlegroundsLobbyInfo: MirrorBattlegroundsLobbyInfo?
 	
 	// MARK: - PowerEventHandler protocol
 	
@@ -1081,6 +1083,7 @@ class Game: NSObject, PowerEventHandler {
     /// The fix: check all player entities for any nonzero BACON_DUO_TEAM_ID tag.
     /// </summary>
     private func tryCorrectMisreadSoloGameType() {
+        // swiftlint:disable switch_case_alignment
         let duoGameTypeEquivalent = switch _currentGameType {
             case GameType.gt_battlegrounds: GameType.gt_battlegrounds_duo
             case GameType.gt_battlegrounds_friendly: GameType.gt_battlegrounds_duo_friendly
@@ -1088,6 +1091,7 @@ class Game: NSObject, PowerEventHandler {
             case GameType.gt_battlegrounds_player_vs_ai: GameType.gt_battlegrounds_duo_vs_ai
             default: GameType.gt_unknown
         }
+        // swiftlint:enable switch_case_alignment
         let hasDuoTeamId = entities.values
             .any({ e in e.has(tag: GameTag.player_id) && e[GameTag.bacon_duo_team_id] > 0 })
         if hasDuoTeamId {
@@ -1099,7 +1103,6 @@ class Game: NSObject, PowerEventHandler {
         }
     }
 
-    
     private var _serverInfo: MirrorGameServerInfo?
     var serverInfo: MirrorGameServerInfo? {
         if _serverInfo == nil {
@@ -1910,6 +1913,7 @@ class Game: NSObject, PowerEventHandler {
                         self.windowManager.battlegroundsSession.updateScaling()
                     }
                     Watchers.battlegroundsLeaderboardWatcher.run()
+                    Watchers.battlegroundsLobbyInfoWatcher.run()
                     if self.isBattlegroundsDuosMatch() {
                         Watchers.battlegroundsTeammateBoardStateWatcher.run()
                     }
@@ -2087,6 +2091,8 @@ class Game: NSObject, PowerEventHandler {
                     battlegroundsDetails?.lobby_hero_dbf_ids?.append(lobbyHero.card.dbfId)
                 }
                 result.battlegroundsDetails = battlegroundsDetails
+                result.battlegroundsDetails?.game_uuid = battlegroundsLobbyInfo?.gameUuid
+                result.battlegroundsDetails?.lobby_players = battlegroundsLobbyInfo?.players.compactMap({ p in UploadMetaData.BattlegroundsLobbyStatePlayer(hero_card_id: p.heroCardId, player_name: p.name, account_hi: p.accountId.hi.int64Value, account_lo: p.accountId.lo.int64Value) })
             }
             result.battlegroundsRaces = self.availableRaces?.compactMap({ x in Race.allCases.firstIndex(of: x)}) ?? []
 
@@ -2166,16 +2172,14 @@ class Game: NSObject, PowerEventHandler {
             hideBattlegroundsHeroPanel()
             hideBattlegroundsTimewarpPanel()
         }
-        if isConstructedMatch() {
+        if isTraditionalHearthstoneMatch {
             hideMulliganToast()
             DispatchQueue.main.async {
                 self.player.mulliganCardStats = nil
                 self.hideMulliganGuideStats()
             }
-            if opponent.isPlayingWhizbang {
-                opponent.isPlayingWhizbang = false
-                Player.knownOpponentDeck = nil
-            }
+            opponent.isPlayingWhizbang = false
+            Player.knownOpponentDeck = nil
         }
 
         if let currentDeck = self.currentDeck {
@@ -3203,6 +3207,7 @@ class Game: NSObject, PowerEventHandler {
     @available(macOS 10.15.0, *) @MainActor
     private func handleBattlegroundsStart() async {
         Watchers.battlegroundsLeaderboardWatcher.run()
+        Watchers.battlegroundsLobbyInfoWatcher.run()
         OpponentDeadForTracker.reset()
         var heroes = [Entity]()
         for _ in 0 ..< 10 {
@@ -4041,6 +4046,7 @@ class Game: NSObject, PowerEventHandler {
             }
         case ChoiceType.general:
             counterManager.handleChoicePicked(choice: choice)
+            handleSphereOfSapienceChosen(choice, chosen, source)
             if isBattlegroundsMatch() {
                 windowManager.battlegroundsQuestPicking.viewModel.reset()
                 windowManager.battlegroundsTrinketPicking.viewModel.reset()
@@ -4062,6 +4068,37 @@ class Game: NSObject, PowerEventHandler {
             }
         default: break
         }
+    }
+    
+    // Sphere of Sapience offers the top card of the deck, or "A New Fate" to put it on the
+    // bottom. The card in the deck never changes zone, and the offered card is only a copy of
+    // it, so the choice is the only signal we get about the new position.
+    private func handleSphereOfSapienceChosen(_ choice: IHsCompletedChoice, _ chosen: [Entity], _ source: Entity?) {
+        if source?.cardId != CardIds.Collectible.Neutral.SphereOfSapience {
+            return
+        }
+
+        let offeredCopy = choice.offeredEntityIds?
+            .compactMap { id in entities[id] }
+            .first { x in x.cardId != CardIds.NonCollectible.Neutral.SphereofSapience_ANewFateToken }
+        guard let offeredCopy else {
+            return
+        }
+
+        var linkedId = offeredCopy[GameTag.linked_entity]
+        if linkedId == 0 {
+            linkedId = offeredCopy[GameTag.copied_from_entity_id]
+        }
+        guard let topCard = entities[linkedId], !topCard.isInDeck else {
+            return
+        }
+
+        let putOnBottom = chosen.any({ x in x.cardId == CardIds.NonCollectible.Neutral.SphereofSapience_ANewFateToken })
+        dredgeCounter += 1
+        let newIndex = dredgeCounter
+        topCard.info.deckIndex = putOnBottom ? -newIndex : newIndex
+        logger.info("Sphere of Sapience \(putOnBottom ? "Bottom" : "Top"): \(topCard)")
+        updatePlayerTracker()
     }
     
     @available(macOS 10.15.0, *) @MainActor

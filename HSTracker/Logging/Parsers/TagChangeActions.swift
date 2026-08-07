@@ -279,7 +279,7 @@ struct TagChangeActions {
         // transformed minion: the minion in PLAY copies from a SETASIDE entity
         if let currentBlock = AppDelegate.instance().coreManager.logReaderManager.powerGameStateParser.currentBlock, eventHandler.currentGameMode == GameMode.battlegrounds && currentBlock.cardId == CardIds.NonCollectible.Neutral.FlobbidinousFloop_GloriousGloop && entity.isMinion && entity.isInZone(zone: .play), let floopCopySource = eventHandler.entities[value],
             floopCopySource.isInZone(zone: .setaside) {
-            BobsBuddyInvoker.instance(gameId: eventHandler.gameId, turn: eventHandler.turnNumber())?.updateFlobbidinousFloopTransformDuos(entity)
+            BobsBuddyInvoker.instance(gameId: eventHandler.gameId, turn: eventHandler.turnNumber())?.updateFlobbidinousFloopTransformDuos(entity, currentBlock.sourceEntityId)
         }
         
         if let currentBlock = AppDelegate.instance().coreManager.logReaderManager.powerGameStateParser.currentBlock, eventHandler.currentGameMode == GameMode.battlegrounds && (currentBlock.cardId == CardIds.NonCollectible.Neutral.SummoningSphere || currentBlock.cardId == CardIds.NonCollectible.Neutral.LesserTrinket) && entity.isMinion &&
@@ -538,6 +538,19 @@ struct TagChangeActions {
         guard let entity = eventHandler.entities[value] else {
             return
         }
+        
+        // Signal to flush AutoAssembler deathrattles observed during a sequence of Deathrattle Blocks
+        if BobsBuddyInvoker.currentCombatHasPendingAutoAssemblerObservations {
+            BobsBuddyInvoker.instance(gameId: eventHandler.gameId, turn: eventHandler.turnNumber())?
+                .flushAndUpdateObservedAutoAssemblerDeathrattlesAsync()
+        }
+        
+        // Signal to flush granted Surf n' Surf Crab deathrattles observed during a sequence of Deathrattle Blocks
+        if BobsBuddyInvoker.currentCombatHasPendingCrabObservations {
+            BobsBuddyInvoker.instance(gameId: eventHandler.gameId, turn: eventHandler.turnNumber())?
+                .flushAndUpdateObservedCrabDeathrattlesAsync()
+        }
+        
         if entity.isHero {
             logger.debug("Saw hero attack from \(entity.cardId)")
 
@@ -697,7 +710,10 @@ struct TagChangeActions {
         
         let hideEntity = powerGameStateParser?.currentBlock?.hideShowEntities ?? false && entity.isControlled(by: eventHandler.opponent.id)
         
-        let isStartOfTheGameEffect = powerGameStateParser?.currentBlock?.triggerKeyword == "START_OF_GAME_KEYWORD"
+        // Some start of game effects (e.g. Prince Renathal) reveal themselves from a block that is
+        // not tagged with START_OF_GAME_KEYWORD. Nothing else reveals opponent cards during the
+        // mulligan, so treat any reveal happening then as a start of game effect.
+        let isStartOfTheGameEffect = powerGameStateParser?.currentBlock?.triggerKeyword == "START_OF_GAME_KEYWORD" || (eventHandler.gameEntity?[GameTag.step] ?? Int.max) <= Step.begin_mulligan.rawValue
         
         // cultivating sprite's bulb is set to not revealed, but it is a known card
         let isCultivatingSpriteBulb = powerGameStateParser?.currentBlock?.cardId == CardIds.Collectible.Neutral.CultivatingSprite && entity.cardId == CardIds.NonCollectible.Neutral.CultivatingSprite_BloomingBulbToken
