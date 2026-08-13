@@ -125,6 +125,22 @@ jobs:
             conflict_files="$(
               git diff --name-only --diff-filter=U
             )"
+            project_file="HSTracker.xcodeproj/project.pbxproj"
+            if [ "$conflict_files" = "$project_file" ]; then
+              base_file="$RUNNER_TEMP/project.pbxproj.base"
+              ours_file="$RUNNER_TEMP/project.pbxproj.ours"
+              theirs_file="$RUNNER_TEMP/project.pbxproj.theirs"
+              git show ":1:$project_file" > "$base_file"
+              git show ":2:$project_file" > "$ours_file"
+              git show ":3:$project_file" > "$theirs_file"
+              if git merge-file --union "$ours_file" "$base_file" "$theirs_file" &&
+                plutil -lint "$ours_file" >/dev/null; then
+                cp "$ours_file" "$project_file"
+                git add "$project_file"
+                apply_status=0
+                echo "Auto-resolved insertion-only Xcode project conflict with a union merge."
+              fi
+            fi
             version_file="HSTracker/BobsBuddy-version.txt"
             if [ "$conflict_files" = "$version_file" ]; then
               fork_version="$(
