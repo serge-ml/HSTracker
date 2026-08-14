@@ -1154,5 +1154,15 @@ extension CardIds.NonCollectible {
         static let TimewarpedNelliesShipToken2 = "BG34_Giant_074t_G"
         static let Magnanimoose_Magnanimoose = "BGDUO_105_G"
         static let Sandy_Sandy = "BGDUO_125_G"
+        static let MoonBaconJazzer_BloodGemPlayerEnchantDnt = "BG26_159pe"
+        static let AncestralAutomaton = "BG_TTN_401"
+        static let AncestralAutomaton_AncestralAutomaton = "BG_TTN_401_G"
+        static let SurfnSurf_CrabToken = "BG27_004t2"
+        static let SurfnSurf_Crab = "BG27_004_Gt2"
+        static let SphereofSapience_ANewFateToken = "SCH_259t"
+        static let LadyDeathwhisperTavernBrawl1 = "TB_BaconShop_HERO_Deathwhisper"
+        static let AccordoTron_AccordOTron = "BG26_147_G"
+        static let AccordoTron_AccordOTronEnchantment = "BG26_147e"
+        static let BilgewaterBreakout_LockboxToken = "BG36_520t"
     }
 }
