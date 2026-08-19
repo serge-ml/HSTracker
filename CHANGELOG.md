@@ -1,3 +1,39 @@
+# 3.6.5
+**Updated for Hearthstone 36.2.2**
+## Battlegrounds
+- Added counters for Eternal Knight and Ancestral Automaton.
+- Fixed issues that could cause Latest Games to not work in Duos.
+- Updated the list of Trinkets that cause Tavern Tier 7 to appear.
+- Fixed a number of incorrect combat odds.
+- Fixed a crash when Sandy was on the board in Duos.
+- Fixed a recent issue with incorrect combat odds around Polarizing Beatboxer.
+
+# 3.6.4
+## Hearthstone
+- New Premium feature: Mulligan G-V2!\
+  *As a free user, you can try it for 5 games per week.*
+
+# 3.6.3
+**Updated for Hearthstone 36.2**
+## Fixes
+- Improved Settings pane layouts (thanks @tusbar)
+- Improved French translations (thanks @tusbar)
+- Fixed import of decks with sideboards
+## Hearthstone
+- Added King Of The Underbelly Band to the decklist.
+- Improve secret tracker with secrets created by Mage's Quest reward The Origin Stone.
+- Added a counter for Infest the Scullery.
+- Added cards to the bottom of the deck by Sphere of Sapience.
+- Fixed decklist not updating with the card shuffled by Shattered Reflection.
+- Fixed Vengeful Spirit highlighting weapons in the decklist.
+- Added support to Hemet, Jungle Hunter.
+## Battlegrounds
+- Significantly improved how fast Bob's Buddy calculates the combat odds.
+- Fixed Accord-O-Tron not appearing in the Gold Next Turn counter.
+- Fixed an issue that could cause the Trinket overlay to be partially obscured when another choice was queued up (e.g. Kerrigan's Zerg pick).
+- Fixed some Bob's Buddy predictions in Duos.
+- And many more fixes and improvements.
+
 # 3.6.2
 **Updated for Hearthstone 36.0.3**
 ## Hearthstone
