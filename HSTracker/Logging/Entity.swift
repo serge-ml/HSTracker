@@ -248,6 +248,7 @@ extension Entity: NSCopying {
         e.info.deckIndex = info.deckIndex
         e.info.inGraveyardAtStartOfGame = info.inGraveyardAtStartOfGame
         e.info.guessedCardState = info.guessedCardState
+        e.info.pendingStartOfGameReveal = info.pendingStartOfGameReveal
         e.info.latestCardId = info.latestCardId
         e.info.storedCardIds = info.storedCardIds
         e.info.forged = info.forged
@@ -259,6 +260,8 @@ extension Entity: NSCopying {
         e.info.costReduction = info.costReduction
         e.info.revealedOnHistory = info.revealedOnHistory
         e.info.creatorId = info.creatorId
+        e.info.cardIdBeforeReveal = info.cardIdBeforeReveal
+        e.info.originalCardId = info.originalCardId
 
         return e
     }

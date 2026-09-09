@@ -1,3 +1,142 @@
+# 3.6.10
+## Hearthstone
+- Added diagnostics to the deck tracker's card list to help track down the remaining random crashes on macOS 26, which are caused by overlay work still running off the main thread.
+- Stopped reporting HSReplay and card art server errors as HSTracker crashes. They are outages on the server side, which HSTracker already handles by carrying on, and they were crowding out the crash reports we can act on.
+- Fixed HSTracker quitting when the Game settings pane was opened and Hearthstone could not be found, which is exactly when its "Can't find Hearthstone" warning is meant to appear.
+- Fixed the deck manager freezing the whole app, sometimes for hours, when the decks were sorted by win percentage, wins, losses or games played. Every table view redraw re-sorted the deck list from scratch, and each comparison re-read a deck's entire game history from the database. The sort is now computed once per refresh and the records are reused, so a large collection sorts instantly. Because the setting is saved, restarting HSTracker used to walk straight back into the freeze.
+- Fixed the deck manager sorting by wins, losses and games played counting only ranked games while the row underneath showed the totals for every mode, so the list looked wrongly ordered.
+- The deck manager now reads the deck records on a background thread, showing a spinner and the decks in name order until they are ready, so a large collection cannot stall the trackers while it sorts.
+- Fixed HSTracker throwing away every setting on launch and asking for the languages again, for anyone who still had preferences left behind by the pre-2018 `be.michotte.hstracker` bundle id. The migration that copies them over replaced our whole preferences file with the 2018 one and ran again on every launch, with nothing recording that it had already happened. It now merges the old values in underneath the current ones, and only ever runs once.
+- The first-run configuration window now shows the languages that are already configured, instead of two empty fields. It is also shown when only the Hearthstone folder is missing, which made it look as though the languages had been forgotten as well. Which of the two is actually missing is now written to the log.
+## Battlegrounds
+- Fixed the counter tooltips keeping the card art of the previously hovered counter, so hovering the Blood Gem counter after the Beetle counter showed a Beetle under the "Blood Gem" title. The same stale art could appear in The OutFinder's pool browser after filtering the pool.
+- Fixed the Blood Gem counter's tooltip listing only the Blood Gem itself instead of the Quilboar payoffs, unlike Hearthstone Deck Tracker.
+- Fixed the Battlegrounds comp guide being drawn wider than the tab strip above it, so it hung over the game board on either side. Its core and addon card rows had gaps between the minions, and an extra inset around them, that Hearthstone Deck Tracker does not have.
+- Fixed trinket guide tooltips being left behind on the game board. Hovering a trinket could stack up several copies of its tooltip, and every one but the last stayed on screen until a trinket was picked.
+## Bob's Buddy
+- Bob's Buddy now runs on the .NET runtime HSTracker actually asks for. The build downloaded the runtime named in its version file but refused to unpack it over the previous one, and then staged a hardcoded .NET 7 directory regardless, so every release since August has kept running 7.0.20 while the project had moved to 8.0.29. The staged runtime is now derived from that version file, the download replaces what came before it, and a build that cannot find the runtime it was told to use fails instead of quietly shipping the wrong one.
+- Fixed Bob's Buddy failing with a "Could not load file or assembly 'System.Runtime.Intrinsics'" error on every simulation thread, which left the panel stuck without odds. The vectorized `Enumerable.Max` that the simulator reaches through resolves against that assembly, and it was one of the parts of the .NET runtime the app bundle did not ship. It is now staged alongside the rest, as is System.Threading.ThreadPool, which the same simulation threads run through and which was left out for the same reason.
+- Fixed HSTracker quitting during a Battlegrounds Duos combat with Scoutmaster Tavish's Lock and Load, within seconds of every restart, because it re-reads the same combat from the log each time it starts. Bob's Buddy attached the log reader's thread to the simulator a second time without detaching in between, and the mono runtime, which does not count attachments, treats the leftover detach as fatal. The same fault could end any combat where a magnetized Auto Assembler summoned an Ancestral Automaton. All of Bob's Buddy's hand-offs to the simulator now go through one guard that counts nesting, so the crash cannot come back through any of the others. (#1436)
+
+# 3.6.9
+## Hearthstone
+- Fixed the deck tracker redrawing its card rows off the main thread while hovering a Discover choice, which could corrupt memory and crash the app.
+- Fixed a crash on startup when the Bob's Buddy self test hit a simulation error it did not recognize. The self test no longer runs in released builds, which also removes a full simulation from every launch.
+- Added Paladin Imbue's Emerald Portal to The OutFinder.
+- Added a The OutFinder settings pane, matching Hearthstone Deck Tracker's own: it can now be turned off entirely, shown or hidden separately for cards in the deck and cards in hand, and switched between percentages and card counts.
+- Fixed The OutFinder's pool browser drawing its own compact card rows instead of the two displays Hearthstone Deck Tracker offers. It now shows the full card art three to a row, or the deck tracker's card list when "Show pools as a card list (uses less data)" is enabled.
+- Fixed The OutFinder's pool browser not showing a card preview on hover, which Hearthstone Deck Tracker shows in both of its displays.
+## Bob's Buddy
+- Fixed the Defensive Sacrifice Dark Gift not being applied to the simulation when it was offered on a magnetized module.
+
+# 3.6.8
+**Updated for Hearthstone 36.4.2**
+## Hearthstone
+- Fixed empty sideboard panels briefly appearing in the deck tracker.
+- Fixed a crash when the game watchers were started from two threads at once.
+- Fixed random crashes on macOS 26 caused by overlay artwork being composed off the main thread. Card, minion, experience and Mercenaries ability images are now built in a thread-safe way.
+- Fixed a crash when a card hud finished downloading its source card image, which was cropped on the download thread.
+- Fixed a crash when an overlay window was shown for the first time from a background thread.
+- Fixed a second log reader being left running when tracking was started twice while Hearthstone was still loading.
+- Fixed a crash when the counters were rebuilt at the start or end of a match while the counters overlay was reading them.
+- Fixed a crash in the constructed lobby when the mulligan guide deck badges refreshed, which could happen while browsing decks with the mouse.
+- Fixed The OutFinder's percentages and median values being formatted with the region configured in macOS instead of the language HSTracker is set to.
+## Battlegrounds
+- Fixed the Tavern Pinning panel staying on screen after a Battlegrounds match ended, following the player back into the lobby and into other game modes.
+- Fixed the Tier7 pre-lobby widget staying stuck on its loading spinner when HSTracker was started while Hearthstone was already in the Battlegrounds lobby.
+- Fixed the composition guides never loading in the Battlegrounds lobby, leaving the tab stuck on its loading state until a match started.
+- Fixed the composition and hero guide header art fading out too early, leaving it dimmer than intended.
+- Fixed the session MMR being formatted with the region configured in macOS instead of the language HSTracker is set to.
+## Bob's Buddy
+- Fixed magnetized Auto Assembler Deathrattle observations never being applied to the simulation.
+- Fixed Auto Assembler Deathrattles not being detected on dual-race Mechs.
+- Fixed Objectives not capturing their second and third script data values.
+- Fixed an Auto Assembler on the board having its own innate Deathrattle counted twice.
+- Fixed the Eternal Legion counter not being read, including Eternal Portrait's accumulated bonus.
+- Fixed Scoutmaster Tavish's Lock and Load minion not being captured when it fired before the combat snapshot.
+- Fixed Nellie's Ship and Magnanimoose enchantments being attached more than once during a combat.
+- Fixed Auto Assembler Deathrattles being miscounted when the host minion had other Deathrattles.
+- Fixed the Sanlayn Scribe counter not being captured in Duos.
+- Fixed an Auto Assembler Deathrattle that summoned nothing being counted a second time alongside a later Deathrattle from the same minion.
+- Fixed the win, tie, loss and lethal percentages being formatted with the region configured in macOS instead of the language HSTracker is set to, and Duos partial results no longer marking their win and loss rates as a lower bound.
+- Fixed Auto Assembler and Sea Star Crab Deathrattle observations from an earlier combat carrying over into the next one.
+- Fixed Auto Assembler Deathrattle firings never being reconciled when the minion summoned nothing, leaving them to be counted against a later combat.
+
+# 3.6.7
+## Fixes
+- Fixed incorrect card database causing missing overlays and other issues
+## Hearthstone
+- Added The OutFinder, our Discover assistant for Constructed and Arena!\
+  *Hover any card that Discovers or generates cards to see its full pool, along with the cost, attack and health distributions. Keyword breakdowns and pool filters are available to HSReplay.net Premium subscribers, and through your Mulligan Guide and Arenasmith trials.*
+- Expanded pool coverage to over 700 Discover and card generation effects across every class.
+- Right-click a card with a large pool to open the full pool browser, with cost and keyword filters.
+## Bob's Buddy
+- Fixed a crash in Battlegrounds Duos matches when Scoutmaster Tavish's Lock and Load hero power fired. (#1432)
+
+# 3.6.6
+## Hearthstone
+- Fixed the secret tracker incorrectly un-excluding secrets when the played minion died later in the turn from something other than a "minion played" secret.
+- Fixed start-of-game effects such as Azalina Soulsever revealing opponent deck information before the mulligan was over.
+- The opponent's counters now account for Azalina Soulsever copying half of your deck into theirs.
+- Corpses can now be tracked and shown for you too, not just the opponent, with a checkbox for each at Options > Player/Opponent.
+- Fixed the secret tracker revealing which secret The Origin Stone cast from a Discover, which is not public information.
+## Battlegrounds
+- Composition, Hero, Quest, Trinket guides are now available.
+- Tavern minion and filtering is now available.
+- Fixed the spell counter for Naga cards (Thaumaturgist and friends) counting in groups of 4 instead of 3.
+- Fixed Rot Hide Gnoll incorrectly appearing in the minion pool.
+- Fixed the Lockbox filter appearing in the Minions browser in lobbies without Pirates.
+## Bob's Buddy
+- Fixed golden Choral Mrrrglr and Costume Enthusiast enchantments not being captured.
+- Fixed Dramaloc Sticker's enchantment not being captured on the opponent's trinket.
+- Fixed Toreth's Blessing not capturing its minion's remaining Divine Shield hits.
+- Fixed Fang Anklet's permanent Beast attack/health bonus not being captured.
+- Fixed Elementals' bonus attack/health from other Elementals not being captured.
+- Fixed a Dark Gift attached to a magnetized minion not being captured.
+- Fixed miscounted magnetized Auto Assembler modules in some cases.
+- Fixed Sneed's New Shredder's Deathrattle summons occasionally being misattributed to a hidden magnetized Auto Assembler module.
+- Fixed a rare false-positive combat prediction triggered during the shopping phase.
+- Fixed the Bob's Buddy panel sometimes staying visible after a Battlegrounds match ended.
+- Fixed Fang Anklet's permanent Beast bonus being incorrectly captured on a non-ghost opponent board.
+- Fixed miscounted Auto Assembler Deathrattles when the board had no space left for the summon.
+- Fixed opponent hand tracking in Duos sometimes mixing up the two opponents' hands.
+
+# 3.6.5
+**Updated for Hearthstone 36.2.2**
+## Battlegrounds
+- Added counters for Eternal Knight and Ancestral Automaton.
+- Fixed issues that could cause Latest Games to not work in Duos.
+- Updated the list of Trinkets that cause Tavern Tier 7 to appear.
+- Fixed a number of incorrect combat odds.
+- Fixed a crash when Sandy was on the board in Duos.
+- Fixed a recent issue with incorrect combat odds around Polarizing Beatboxer.
+
+# 3.6.4
+## Hearthstone
+- New Premium feature: Mulligan G-V2!\
+  *As a free user, you can try it for 5 games per week.*
+
+# 3.6.3
+**Updated for Hearthstone 36.2**
+## Fixes
+- Improved Settings pane layouts (thanks @tusbar)
+- Improved French translations (thanks @tusbar)
+- Fixed import of decks with sideboards
+## Hearthstone
+- Added King Of The Underbelly Band to the decklist.
+- Improve secret tracker with secrets created by Mage's Quest reward The Origin Stone.
+- Added a counter for Infest the Scullery.
+- Added cards to the bottom of the deck by Sphere of Sapience.
+- Fixed decklist not updating with the card shuffled by Shattered Reflection.
+- Fixed Vengeful Spirit highlighting weapons in the decklist.
+- Added support to Hemet, Jungle Hunter.
+## Battlegrounds
+- Significantly improved how fast Bob's Buddy calculates the combat odds.
+- Fixed Accord-O-Tron not appearing in the Gold Next Turn counter.
+- Fixed an issue that could cause the Trinket overlay to be partially obscured when another choice was queued up (e.g. Kerrigan's Zerg pick).
+- Fixed some Bob's Buddy predictions in Duos.
+- And many more fixes and improvements.
+
 # 3.6.2
 **Updated for Hearthstone 36.0.3**
 ## Hearthstone

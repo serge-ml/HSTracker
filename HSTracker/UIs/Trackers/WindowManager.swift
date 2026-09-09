@@ -61,10 +61,6 @@ class WindowManager {
         return $0
     }(TimerHud(windowNibName: "TimerHud"))
 
-    var turnCounter: TurnCounter = {
-        return $0
-    }(TurnCounter(windowNibName: "TurnCounter"))
-
     var battlegroundsOverlay: BattlegroundsOverlay = {
         return $0
     }(BattlegroundsOverlay(windowNibName: "BattlegroundsOverlay"))
@@ -72,14 +68,6 @@ class WindowManager {
     var battlegroundsDetailsWindow: BattlegroundsDetailsWindow = {
         return $0
     }(BattlegroundsDetailsWindow(windowNibName: "BattlegroundsDetailsWindow"))
-
-    var battlegroundsTierOverlay: BattlegroundsTierOverlay = {
-        return $0
-    }(BattlegroundsTierOverlay(windowNibName: "BattlegroundsTierOverlay"))
-
-    var battlegroundsTierDetailsWindowController: BattlegroundsTierDetailWindowController = {
-        return $0
-    }(BattlegroundsTierDetailWindowController(windowNibName: "BattlegroundsTierDetailWindowController"))
     
     var bobsBuddyPanel: BobsBuddyPanel = {
         return $0
@@ -181,6 +169,15 @@ class WindowManager {
         return (_opponentPlayerResourcesOverlay as? PlayerResourcesWindow)
     }
 
+    private var _rootOverlay: Any?
+    @available(OSX 10.15, *)
+    var rootOverlay: RootOverlayWindow? {
+        if _rootOverlay == nil {
+            _rootOverlay = RootOverlayWindow(windowNibName: "RootOverlayWindow")
+        }
+        return (_rootOverlay as? RootOverlayWindow)
+    }
+
     var toastWindowController = ToastWindowController()
 
     var floatingCard: FloatingCard = {
@@ -247,9 +244,10 @@ class WindowManager {
         return $0
     }(CardHudContainer(windowNibName: "CardHudContainer"))
     
-    var tooltipGridCards: GridCardImages = {
-        return $0
-    }(GridCardImages(windowNibName: "GridCardImages"))
+    @available(macOS 10.15, *)
+    var tooltipGridCards: RelatedCardsTooltipPanel {
+        RelatedCardsTooltipPanel.shared
+    }
 
     private var lastCardsUpdateRequest = Date.distantPast.timeIntervalSince1970
 
@@ -289,15 +287,16 @@ class WindowManager {
             self?.opponentBoardDamage.window?.orderOut(nil)
             self?.battlegroundsDetailsWindow.window?.orderOut(nil)
             self?.bobsBuddyPanel.window?.orderOut(nil)
-            self?.turnCounter.window?.orderOut(nil)
-            self?.battlegroundsTierOverlay.window?.orderOut(nil)
             self?.cardHudContainer.reset()
             self?.playerBoardOverlay.window?.orderOut(nil)
             self?.opponentBoardOverlay.window?.orderOut(nil)
             self?.flavorText.window?.orderOut(nil)
             self?.playerActiveEffectsOverlay.window?.orderOut(nil)
             self?.opponentActiveEffectsOverlay.window?.orderOut(nil)
-            self?.tooltipGridCards.window?.orderOut(nil)
+            if #available(macOS 10.15, *) {
+                self?.tooltipGridCards.hide()
+                RelatedCardsBrowserPanel.shared.hide()
+            }
         }
     }
 
@@ -401,7 +400,9 @@ class WindowManager {
             self.floatingCard3.window?.orderOut(self)
             self.closeRequestTimer?.invalidate()
             self.closeRequestTimer = nil
-            self.tooltipGridCards.window?.orderOut(self)
+            if #available(macOS 10.15, *) {
+                self.tooltipGridCards.hide()
+            }
         }
     }
 
@@ -409,14 +410,16 @@ class WindowManager {
     @MainActor
     func show(controller: OverWindowController, show: Bool,
               frame: NSRect? = nil, title: String? = nil, overlay: Bool = true) {
-        guard let window = controller.window else { return }
-
+        // `controller.window` loads the nib on first access, so the hop has to
+        // happen before it is touched, not after.
         if !Thread.isMainThread {
             DispatchQueue.main.async {
                 self.show(controller: controller, show: show, frame: frame, title: title, overlay: overlay)
             }
             return
         }
+
+        guard let window = controller.window else { return }
         
         if show {
             // add the window in the "windows menu"

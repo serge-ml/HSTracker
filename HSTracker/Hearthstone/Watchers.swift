@@ -12,6 +12,7 @@ class Watchers {
     static let arenaWatcher = ArenaWatcher()
     static let baconWatcher = BaconWatcher()
     static let battlegroundsLeaderboardWatcher = BattlegroundsLeaderboardWatcher()
+    static let battlegroundsLobbyInfoWatcher = BattlegroundsLobbyInfoWatcher()
     static let battlegroundsTeammateBoardStateWatcher = BattlegroundsTeammateBoardStateWatcher()
     static let bigCardWatcher = BigCardWatcher()
     static let choicesWatcher = ChoicesWatcher()
@@ -19,6 +20,7 @@ class Watchers {
     static let discoverStateWatcher = DiscoverStateWatcher()
     static let dungeonRunDeckWatcher = DungeonRunDeckWatcher()
     static let experienceWatcher = ExperienceWatcher()
+    static let playZoneWatcher = PlayZoneWatcher()
     static let pvpDungeonRunWatcher = PVPDungeonRunWatcher()
     static let queueWatcher = QueueWatcher()
     static let sceneWatcher = SceneWatcher()
@@ -34,6 +36,7 @@ class Watchers {
             game.windowManager.battlegroundsOverlay.view.setHoveredBattlegroundsEntityId(args.hoveredEntityId)
 
         }
+        battlegroundsLobbyInfoWatcher.change = onBattlegroundsLobbyInfoChange
         battlegroundsTeammateBoardStateWatcher.change = onBattlegroundsTeammateBoardStateChange
         bigCardWatcher.change = onBigCardChange
         choicesWatcher.change = { _, args in
@@ -53,6 +56,7 @@ class Watchers {
         experienceWatcher.newExperienceHandler = { _, args in
             AppDelegate.instance().coreManager.game.experienceChangedAsync(experience: args.experience, experienceNeeded: args.experienceNeeded, level: args.level, levelChange: args.levelChange, animate: args.animate)
         }
+        playZoneWatcher.change = onPlayZoneChange
         pvpDungeonRunWatcher.pvpDungeonRunMatchStarted = { newrun, set in
             CoreManager.dungeonRunMatchStarted(newRun: newrun, set: set, isPVPDR: true)
         }
@@ -71,6 +75,7 @@ class Watchers {
         arenaWatcher.stop()
         baconWatcher.stop()
         battlegroundsLeaderboardWatcher.stop()
+        battlegroundsLobbyInfoWatcher.stop()
         battlegroundsTeammateBoardStateWatcher.stop()
         bigCardWatcher.stop()
         choicesWatcher.stop()
@@ -79,6 +84,7 @@ class Watchers {
         discoverStateWatcher.stop()
         dungeonRunDeckWatcher.stop()
         experienceWatcher.stop()
+        playZoneWatcher.stop()
         pvpDungeonRunWatcher.stop()
         queueWatcher.stop()
         sceneWatcher.stop()
@@ -104,6 +110,16 @@ class Watchers {
         // rest is not used
     }
     
+    // Mirrors HDT's Watchers.OnPlayZoneChange. In Battlegrounds the opposing
+    // play zone is Bob's shop; outside of it nothing consumes the board state
+    // here, so the fallback list isn't built on every tick.
+    private static func onPlayZoneChange(_ sender: PlayZoneWatcher, _ args: BoardStateArgs) {
+        let game = AppDelegate.instance().coreManager.game
+        guard game.isBattlegroundsMatch() else { return }
+        game.handleShopBoardState(boardCards: args.opposing?.boardCards ?? [],
+                                  mousedOverSlot: args.opposing?.mousedOverSlot ?? -1)
+    }
+
     private static func onBigCardChange(_ sender: BigCardWatcher, _ args: BigCardArgs) {
         AppDelegate.instance().coreManager.game.onBigCardChange(args)
     }
@@ -115,8 +131,18 @@ class Watchers {
     private static func onDiscoverStateChange(_ sender: DiscoverStateWatcher, _ args: DiscoverStateArgs) {
         let game = AppDelegate.instance().coreManager.game
         game.setRelatedCardsTrigger(args)
-        if game.isTraditionalHearthstoneMatch {
-            game.windowManager.playerTracker.highlightPlayerDeckCards(highlightSourceCardId: args.cardId)
+        // This runs on the DiscoverStateWatcher queue. highlightPlayerDeckCards
+        // reaches into the tracker window and marks card bars for redisplay, so
+        // it has to run on the main thread - Game.onBigCardChange hops for the
+        // same call (Sentry HSTRACKER-304).
+        DispatchQueue.main.async {
+            if game.isTraditionalHearthstoneMatch {
+                game.windowManager.playerTracker.highlightPlayerDeckCards(highlightSourceCardId: args.cardId)
+            }
         }
+    }
+    
+    private static func onBattlegroundsLobbyInfoChange(_ sender: BattlegroundsLobbyInfoWatcher, _ args: BattlegroundsLobbyInfoArgs) {
+        AppDelegate.instance().coreManager.game.battlegroundsLobbyInfo = args.lobbyInfo
     }
 }
