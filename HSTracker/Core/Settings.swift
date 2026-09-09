@@ -131,15 +131,34 @@ final class Settings {
 
     static var fullGameLog: Bool = false
 
-    static func validated() -> Bool {
+    /// What the initial configuration window still has to ask the user for.
+    ///
+    /// The window used to be shown on a single all-or-nothing boolean, which told neither the
+    /// user nor us which of the two checks had failed. Reporters saw the languages they had
+    /// picked sitting in the preferences and the window asking for them again, when it was
+    /// really the Hearthstone path that was missing (GitHub issue #1428).
+    struct MissingConfiguration: OptionSet {
+        let rawValue: Int
+
+        static let hearthstonePath = MissingConfiguration(rawValue: 1 << 0)
+        static let languages = MissingConfiguration(rawValue: 1 << 1)
+    }
+
+    static func missingConfiguration() -> MissingConfiguration {
         // fix hearthstone log folder path
         let hs_path = Settings.hearthstonePath
         let suffix = "/Logs"
         if hs_path.hasSuffix(suffix) {
             Settings.hearthstonePath = hs_path.substring(from: 0, length: hs_path.count-suffix.count)
         }
-        return CoreManager.validatedHearthstonePath()
-            && hearthstoneLanguage != nil && hsTrackerLanguage != nil
+        var missing: MissingConfiguration = []
+        if !CoreManager.validatedHearthstonePath() {
+            missing.insert(.hearthstonePath)
+        }
+        if hearthstoneLanguage == nil || hsTrackerLanguage == nil {
+            missing.insert(.languages)
+        }
+        return missing
     }
 
     private static let defaults: UserDefaults = {
@@ -160,6 +179,8 @@ final class Settings {
     
     @UserDefault(key: Settings.show_memory_reading_warning, defaultValue: true)
     static var showMemoryReadingWarning: Bool
+    @UserDefault(key: Settings.migrated_legacy_bundle_id, defaultValue: false)
+    static var migratedLegacyBundleId: Bool
     @UserDefault(key: Settings.can_join_fullscreen, defaultValue: true)
     static var canJoinFullscreen: Bool
     @UserDefault(key: Settings.quit_when_hs_closes, defaultValue: false)
@@ -238,11 +259,29 @@ final class Settings {
     static var showFlavorText: Bool
     @UserDefault(key: Settings.enable_mulligan_guide, defaultValue: true)
     static var enableMulliganGuide: Bool
+    @UserDefault(key: Settings.enable_mulligan_gv2, defaultValue: true)
+    static var enableMulliganGV2: Bool
     @UserDefault(key: Settings.show_mulligan_guide_pre_lobby, defaultValue: true)
     static var showMulliganGuidePreLobby: Bool
     @UserDefault(key: Settings.auto_show_mulligan_guide, defaultValue: true)
     static var autoShowMulliganGuide: Bool
-    
+    @UserDefault(key: Settings.mulligan_gv2_onboarding_seen, defaultValue: false)
+    static var mulliganGV2OnboardingSeen: Bool
+    // The traditional-format sale's own id (RemoteConfig.data.sales.traditional.id)
+    // once the user dismisses that sale's tooltip - stays hidden until a
+    // newer sale (higher id) comes along.
+    @UserDefault(key: Settings.ignore_traditional_sale_id, defaultValue: -1)
+    static var ignoreTraditionalSaleId: Int
+    // JSON-encoded MulliganGuideTrialData (token/gameHandle/lastTrialAlertPending)
+    // - see MulliganGuideTrial.swift.
+    @UserDefault(key: Settings.mulligan_guide_trial_data, defaultValue: nil)
+    static var mulliganGuideTrialData: String?
+    // The "trials exhausted" alert is a one-time heads-up, not a recurring
+    // reminder - shown at most once ever, matching HDT's own
+    // SeenMulliganGuideTrialsExhausted.
+    @UserDefault(key: Settings.seen_mulligan_guide_trials_exhausted, defaultValue: false)
+    static var seenMulliganGuideTrialsExhausted: Bool
+
     // MARK: - Battlegrounds
     @UserDefault(key: Settings.show_bobs_buddy, defaultValue: true)
     static var showBobsBuddy: Bool
@@ -258,6 +297,27 @@ final class Settings {
     static var showOpponentWarband: Bool
     @UserDefault(key: Settings.show_tiers, defaultValue: true)
     static var showTiers: Bool
+
+    // HDT's ShowBattlegroundsBrowser ("Show Minions and Guides Browser") and
+    // ShowBattlegroundsGuides ("Show Hero and Comp Guides"). Between them they
+    // pick one of three top-bar states: nothing, the minions browser on its own,
+    // or the browser inside the guides tabs.
+    //
+    // The browser flag reuses the legacy show_tiers key rather than taking a new
+    // one. That setting gated the AppKit tier overlay, whose tier strip the
+    // browser's own strip replaced when that overlay was removed - so an
+    // existing "off" still means what the user chose: no tier strip.
+    static var showBattlegroundsBrowser: Bool {
+        get { showTiers }
+        set { showTiers = newValue }
+    }
+
+    @UserDefault(key: Settings.show_battlegrounds_guides, defaultValue: true)
+    static var showBattlegroundsGuides: Bool
+    // Mirrors HDT's ShowMinionBrowserBetweenGames: whether the Minions/Comp Guides
+    // browser also shows in the Battlegrounds pre-lobby, before a match starts.
+    @UserDefault(key: Settings.show_battlegrounds_guides_pre_lobby, defaultValue: true)
+    static var showBattlegroundsGuidesPreLobby: Bool
     @UserDefault(key: Settings.show_battlecry_deathrattle_on_tiers, defaultValue: true)
     static var showBattlecryDeathrattleOnTiers: Bool
     @UserDefault(key: Settings.show_tavern_spells, defaultValue: true)
@@ -297,6 +357,23 @@ final class Settings {
     @UserDefault(key: Settings.auto_show_battlegrounds_trinket_picking, defaultValue: true)
     static var autoShowBattlegroundsTrinketPicking: Bool
 
+    // Tavern Pinning (HDT's ShowBattlegroundsTavernMarkers,
+    // AutoEnableTavernMarkersRecommended, TavernMarkersPanelExpanded, and the
+    // three "dismissed" flags its ConfigWrapper exposes). Defaults match
+    // HDT's Config.cs exactly.
+    @UserDefault(key: Settings.show_battlegrounds_tavern_markers, defaultValue: true)
+    static var showBattlegroundsTavernMarkers: Bool
+    @UserDefault(key: Settings.auto_enable_tavern_markers_recommended, defaultValue: false)
+    static var autoEnableTavernMarkersRecommended: Bool
+    @UserDefault(key: Settings.tavern_markers_panel_expanded, defaultValue: true)
+    static var tavernMarkersPanelExpanded: Bool
+    @UserDefault(key: Settings.dismissed_tavern_marker_quick_guide, defaultValue: false)
+    static var dismissedTavernMarkerQuickGuide: Bool
+    @UserDefault(key: Settings.dismissed_comp_guides_marker_quick_guide, defaultValue: false)
+    static var dismissedCompGuidesMarkerQuickGuide: Bool
+    @UserDefault(key: Settings.dismissed_auto_enable_popup, defaultValue: false)
+    static var dismissedAutoEnablePopup: Bool
+
     @UserDefault(key: Settings.player_draw_chance, defaultValue: true)
     static var showPlayerDrawChance: Bool
     @UserDefault(key: Settings.player_card_count, defaultValue: true)
@@ -323,6 +400,23 @@ final class Settings {
     static var showPlayerRelatedCards
     @UserDefault(key: Settings.player_highlight_synergies, defaultValue: true)
     static var showPlayerHighlightSynergies
+    // The OutFinder settings pane, porting HDT's Config.Instance.Outfinder* block. These sit
+    // alongside showPlayer/showOpponentRelatedCards (HDT's HidePlayerRelatedCards) rather than
+    // replacing them: those hide the related-cards tooltip for one tracker, while these gate the
+    // Outfinder - the pool summary and statistics - across the whole app.
+    @UserDefault(key: Settings.outfinder_enabled, defaultValue: true)
+    static var outfinderEnabled: Bool
+    @UserDefault(key: Settings.outfinder_in_deck, defaultValue: true)
+    static var outfinderInDeck: Bool
+    @UserDefault(key: Settings.outfinder_in_hand, defaultValue: true)
+    static var outfinderInHand: Bool
+    // Formats the pool summary as percentages rather than card counts.
+    @UserDefault(key: Settings.outfinder_use_percentages, defaultValue: true)
+    static var outfinderUsePercentages: Bool
+    // Off (HDT's default) draws the pool browser as full card renders, on draws it as a card-tile
+    // list, which downloads far less image data.
+    @UserDefault(key: Settings.outfinder_use_card_tiles, defaultValue: false)
+    static var outfinderUseCardTiles: Bool
     @UserDefault(key: Settings.opponent_deathrattle_frame, defaultValue: false)
     static var showOpponentDeathrattle: Bool
     @UserDefault(key: Settings.opponent_graveyard_frame, defaultValue: true)
@@ -331,6 +425,10 @@ final class Settings {
     static var showOpponentGraveyardDetails: Bool
     @UserDefault(key: Settings.opponent_counters, defaultValue: true)
     static var showOpponentCounters: Bool
+    // Kept on by default: preserves the pre-existing behavior of showing the opponent's corpses count
+    // whenever they are known to have a Death Knight tourist.
+    @UserDefault(key: Settings.opponent_corpses_counter, defaultValue: true)
+    static var showOpponentCorpsesCounter: Bool
     @UserDefault(key: Settings.remove_cards_from_deck, defaultValue: false)
     static var removeCardsFromDeck: Bool
     @UserDefault(key: Settings.highlight_last_drawn, defaultValue: true)
@@ -359,6 +457,10 @@ final class Settings {
     static var showOpponentRelatedCards
     @UserDefault(key: Settings.player_max_resources, defaultValue: true)
     static var showPlayerMaxResources: Bool
+    // Unlike the opponent, there is no way to detect the player has a corpses payoff worth showing
+    // this for automatically - they already know their own deck - so this defaults off.
+    @UserDefault(key: Settings.player_corpses_counter, defaultValue: false)
+    static var showPlayerCorpsesCounter: Bool
     @UserDefault(key: Settings.opponent_max_resources, defaultValue: true)
     static var showOpponentMaxResources: Bool
 
@@ -542,6 +644,7 @@ final class Settings {
 extension Settings {
 
     static let show_memory_reading_warning = "showMemoryReadingWarning"
+    static let migrated_legacy_bundle_id = "migrated_legacy_bundle_id"
     
     static let theme_token = "theme"
 
@@ -576,9 +679,14 @@ extension Settings {
     static let show_mulligan_toast = "show_mulligan_toast"
     static let show_flavor_text = "show_flavor_text"
     static let enable_mulligan_guide = "enable_mulligan_guide"
+    static let enable_mulligan_gv2 = "enable_mulligan_gv2"
     static let show_mulligan_guide_pre_lobby = "show_mulligan_guide_pre_lobby"
     static let auto_show_mulligan_guide = "auto_show_mulligan_guide"
-    
+    static let mulligan_gv2_onboarding_seen = "mulligan_gv2_onboarding_seen"
+    static let ignore_traditional_sale_id = "ignore_traditional_sale_id"
+    static let mulligan_guide_trial_data = "mulligan_guide_trial_data"
+    static let seen_mulligan_guide_trials_exhausted = "seen_mulligan_guide_trials_exhausted"
+
     // MARK: Battlegrounds
     static let show_bobs_buddy = "show_bobs_buddy"
     static let show_bobs_buddy_during_combat = "show_bobs_buddy_during_combat"
@@ -587,6 +695,8 @@ extension Settings {
     static let show_average_damage = "show_average_damage"
     static let show_opponent_warband = "show_opponent_warband"
     static let show_tiers = "show_tiers"
+    static let show_battlegrounds_guides = "show_battlegrounds_guides"
+    static let show_battlegrounds_guides_pre_lobby = "show_battlegrounds_guides_pre_lobby"
     static let show_battlecry_deathrattle_on_tiers = "show_battlecry_deathrattle_on_tiers"
     static let show_tavern_spells = "show_tavern_spells"
     static let show_tavern_triples = "show_tavern_triples"
@@ -606,7 +716,13 @@ extension Settings {
     static let show_battlegrounds_tier7_session_comp_stats = "show_battlegrounds_tier7_session_comp_stats"
     static let always_show_tier_7 = "always_show_tier_7"
     static let auto_show_battlegrounds_trinket_picking = "auto_show_battlegrounds_trinket_picking"
-    
+    static let show_battlegrounds_tavern_markers = "show_battlegrounds_tavern_markers"
+    static let auto_enable_tavern_markers_recommended = "auto_enable_tavern_markers_recommended"
+    static let tavern_markers_panel_expanded = "tavern_markers_panel_expanded"
+    static let dismissed_tavern_marker_quick_guide = "dismissed_tavern_marker_quick_guide"
+    static let dismissed_comp_guides_marker_quick_guide = "dismissed_comp_guides_marker_quick_guide"
+    static let dismissed_auto_enable_popup = "dismissed_auto_enable_popup"
+
     static let player_draw_chance = "player_draw_chance"
     static let player_card_count = "player_card_count"
     static let opponent_card_count = "opponent_card_count"
@@ -620,11 +736,18 @@ extension Settings {
     static let player_counters = "player_counters"
     static let player_related_cards = "player_related_cards"
     static let player_highlight_synergies = "player_highlight_synergies"
+    static let outfinder_enabled = "outfinder_enabled"
+    static let outfinder_in_deck = "outfinder_in_deck"
+    static let outfinder_in_hand = "outfinder_in_hand"
+    static let outfinder_use_percentages = "outfinder_use_percentages"
+    static let outfinder_use_card_tiles = "outfinder_use_card_tiles"
     static let player_max_resources = "player_max_resources"
+    static let player_corpses_counter = "player_corpses_counter"
     static let opponent_deathrattle_frame = "opponent_deathrattle_frame"
     static let opponent_graveyard_frame = "opponent_graveyard_frame"
     static let opponent_graveyard_details_frame = "opponent_graveyard_details_frame"
     static let opponent_counters = "opponent_counters"
+    static let opponent_corpses_counter = "opponent_corpses_counter"
     static let interacted_with_link_opponentDeck = "interacted_with_link_opponentDeck"
     static let enable_link_opponent_deck = "enable_link_opponent_deck"
     static let opponent_related_cards = "opponent_related_cards"

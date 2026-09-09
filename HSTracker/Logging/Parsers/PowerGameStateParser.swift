@@ -31,6 +31,11 @@ class PowerGameStateParser: LogEventParser {
     final let ShuffleRegex = Regex("SHUFFLE_DECK\\ PlayerID=(?<id>(\\d+))")
     final let SubSpellStartRegex = Regex("SUB_SPELL_START - SpellPrefabGUID=(.*) Source=(\\d+)")
     final let MetaInfoRegex = Regex("Info\\[\\d+\\]\\s*=\\s*(?:.*\\bid=(\\d+).*]|\\b(\\d+)\\b)")
+
+    // The spellPrefabGuid for Auto Assembler deathrattle trigger.
+    // It is the only thing inside a trigger block when triggered on a full board.
+    static let autoAssemblerSpellPrefab = "ReuseFX_Mech_OverrideSpawn_Gears_Super"
+
     var tagChangeHandler = TagChangeHandler()
     var tmpEntities = SynchronizedArray<Entity>()
     var currentEntity: Entity?
@@ -304,6 +309,55 @@ class PowerGameStateParser: LogEventParser {
                     }
                 }
                 
+                // Used to detect and update hidden magnetized AutoAssembler deathrattles
+                if  // short-circuit on CardId to minimize frequency of this check
+                    (cardId == CardIds.NonCollectible.Neutral.AncestralAutomaton || cardId == CardIds.NonCollectible.Neutral.AncestralAutomaton_AncestralAutomaton)
+                        && eventHandler.currentGameMode == GameMode.battlegrounds,
+                    let currentBlock,
+                    currentBlock.type == "TRIGGER" && currentBlock.triggerKeyword == "DEATHRATTLE",
+                    let deadMinion = eventHandler.entities[currentBlock.sourceEntityId],
+                    deadMinion.isMinion {
+                    // The CARDRACE tag only carries the primary race, so a dual-race Mech is missed;
+                    // read the race off the card definition instead.
+                    if deadMinion.card.isMech() || deadMinion.card.isAllRace() {
+                        let isGolden = cardId == CardIds.NonCollectible.Neutral.AncestralAutomaton_AncestralAutomaton
+                        let sourceZone = deadMinion[GameTag.zone]
+                        if sourceZone == Zone.graveyard.rawValue {  // Deathrattles triggered the normal way
+                            // Extra-deathrattles (e.g., Titus Rivendare) are tracked on the controlling player entity.
+                            let controller = deadMinion[GameTag.controller]
+                            let controllerEntity = controller == eventHandler.player.id ? eventHandler.playerEntity
+                            : controller == eventHandler.opponent.id ? eventHandler.opponentEntity
+                            : eventHandler.entities.values.filter({ e in e[GameTag.player_id] == controller }).sorted(by: { $0.id < $1.id }).first
+                            let extraDeathrattles = controllerEntity?[GameTag.extra_deathrattles_additional] ?? 0
+                            
+                            BobsBuddyInvoker.instance(gameId: eventHandler.gameId, turn: eventHandler.turnNumber())?
+                                .observeMagnetizedAutoAssemblerDeathrattles(currentBlock.sourceEntityId, extraDeathrattles, isGolden)
+                        }
+                    }
+                }
+                
+                // Used to detect and update hidden granted Surf n' Surf Crab deathrattles
+                if  // short-circuit on CardId to minimize frequency of this check
+                    (cardId == CardIds.NonCollectible.Neutral.SurfnSurf_CrabToken || cardId == CardIds.NonCollectible.Neutral.SurfnSurf_Crab)
+                    && eventHandler.currentGameMode == GameMode.battlegrounds,
+                    let currentBlock,
+                    currentBlock.type == "TRIGGER" && currentBlock.triggerKeyword == "DEATHRATTLE",
+                    let crabDeathrattleSource = eventHandler.entities[currentBlock.sourceEntityId],
+                    crabDeathrattleSource.isMinion {
+                    let isGolden = cardId == CardIds.NonCollectible.Neutral.SurfnSurf_Crab
+                    let sourceZone = crabDeathrattleSource[GameTag.zone]
+                    if sourceZone == Zone.graveyard.rawValue {  // Deathrattles triggered the normal way
+                        // Extra-deathrattles (e.g., Titus Rivendare) are tracked on the controlling player entity.
+                        let controller = crabDeathrattleSource[GameTag.controller]
+                        let controllerEntity = controller == eventHandler.player.id ? eventHandler.playerEntity
+                        : controller == eventHandler.opponent.id ? eventHandler.opponentEntity
+                        : eventHandler.entities.values.filter { e in e[GameTag.player_id] == controller }.sorted(by: { $0.id < $1.id }).first
+                        let extraDeathrattles = controllerEntity?[GameTag.extra_deathrattles_additional] ?? 0
+                        
+                        BobsBuddyInvoker.instance(gameId: eventHandler.gameId, turn: eventHandler.turnNumber())?
+                            .observeGrantedCrabDeathrattles(currentBlock.sourceEntityId, extraDeathrattles, isGolden)
+                    }
+                }
                 if let currentBlock = currentBlock, entity.cardId.uppercased().contains("HERO") {
                     currentBlock.hasFullEntityHeroPackets = true
                 }
@@ -352,6 +406,13 @@ class PowerGameStateParser: LogEventParser {
                 }
                 let entity = eventHandler.entities[entityId]!
                 let oldCardId = entity.cardId
+                // A Battlegrounds trinket slot (Lesser/Greater Trinket) or trinket-granting hero
+                // power (Fantastic Treasure, Growing Collection) is revealed by CHANGE_ENTITY.
+                if entity.info.cardIdBeforeReveal?.isEmpty ?? true
+                    && !oldCardId.isEmpty
+                    && oldCardId != cardId {
+                    entity.info.cardIdBeforeReveal = oldCardId
+                }
                 if entity.cardId.isBlank ||
                     // placeholders and Fantastic Treasure (Marin's hero power)
                     entity.has(tag: .bacon_is_magic_item_discover) ||
@@ -530,7 +591,13 @@ class PowerGameStateParser: LogEventParser {
                 eventHandler.handlePlayerDredge()
             }
         } else if logLine.line.contains("META_DATA - Meta=OVERRIDE_HISTORY") {
-            AppDelegate.instance().coreManager.logReaderManager.powerGameStateParser.currentBlock?.hideShowEntities = true
+            if let currentBlock = currentBlock {
+                let e = eventHandler.entities[currentBlock.sourceEntityId]
+                let isPlayerHemet = currentBlock.cardId == CardIds.Collectible.Neutral.HemetJungleHunter && (e?.isControlled(by: eventHandler.player.id) ?? false)
+                if !isPlayerHemet {
+                    AppDelegate.instance().coreManager.logReaderManager.powerGameStateParser.currentBlock?.hideShowEntities = true
+                }
+            }
         } else if logLine.line.contains("META_DATA - Meta=HISTORY_TARGET") {
             gameStateIsInsideMetaDataHistoryTarget = true
             isInsideMetaDataHistoryTarget = true
@@ -561,6 +628,17 @@ class PowerGameStateParser: LogEventParser {
         } else if SubSpellStartRegex.match(logLine.line) {
             let match = SubSpellStartRegex.matches(logLine.line)
             if let sourceId = Int(match[1].value) {
+                // Count the Auto Assembler Deathrattle TRIGGERS (not just those that summoned onto the board).
+                if match[0].value.starts(with: PowerGameStateParser.autoAssemblerSpellPrefab),
+                   currentBlock?.type == "TRIGGER", currentBlock?.triggerKeyword == "DEATHRATTLE",
+                   eventHandler.currentGameMode == GameMode.battlegrounds,
+                   let firingMinion = eventHandler.entities[sourceId],
+                   firingMinion.isMinion,
+                   firingMinion[GameTag.zone] == Zone.play.rawValue || firingMinion[GameTag.zone] == Zone.graveyard.rawValue {
+                    BobsBuddyInvoker.instance(gameId: eventHandler.gameId, turn: eventHandler.turnNumber())?
+                        .observeAutoAssemblerDeathrattleFiring(sourceId)
+                }
+
                 if let entity = eventHandler.entities[sourceId] {
                     if entity.cardId == CardIds.Collectible.Druid.BottomlessToyChest {
                         let lastCardDrawnId = eventHandler.opponent.hand.sorted(by: { $0.zonePosition > $1.zonePosition}).first?.id ?? -1
@@ -642,13 +720,8 @@ class PowerGameStateParser: LogEventParser {
                     if let actionStartingCardId = actionStartingCardId {
                         
                         switch actionStartingCardId {
-                        case CardIds.Collectible.Neutral.SphereOfSapience:
-                            // These are tricky to implement correctly, so
-                            // until the are, we will just reset the state
-                            // known about the top/bottom of the deck
-                            if actionStartingEntity?.isControlled(by: player?.id ?? 0) ?? false {
-                                eventHandler.handlePlayerUnknownCardAddedToDeck()
-                            }
+                            // Sphere of Sapience is resolved from the entity choice it offers,
+                            // see Game.handleSphereOfSapienceChosen
                         case CardIds.Collectible.Rogue.TradePrinceGallywix:
                             if let entity = eventHandler.entities[eventHandler.lastCardPlayed] {
                                 let cardId = entity.cardId
@@ -946,7 +1019,8 @@ class PowerGameStateParser: LogEventParser {
                              CardIds.Collectible.Neutral.DragonBreeder,
                              CardIds.Collectible.Shaman.ColdStorage,
                              CardIds.Collectible.Priest.PowerChordSynchronize,
-                             CardIds.Collectible.Rogue.Shadowcaster:
+                             CardIds.Collectible.Rogue.Shadowcaster,
+                             CardIds.Collectible.Priest.ShatteredReflections:
                             addKnownCardId(eventHandler: eventHandler,
                                            cardId: target)
                         case CardIds.Collectible.Mage.ForgottenTorch:
@@ -1248,6 +1322,9 @@ class PowerGameStateParser: LogEventParser {
                                     addKnownCardId(eventHandler: eventHandler, cardId: card)
                                 }
                             }
+                        case CardIds.Collectible.Priest.SlimeEm:
+                            eventHandler.player.slimedMinions = eventHandler.player.board.filter { $0.isMinion }
+                            eventHandler.opponent.slimedMinions = eventHandler.opponent.board.filter { $0.isMinion }
                         case CardIds.NonCollectible.Priest.Repackage_RepackagedBoxToken:
                             for card in actionStartingEntity?.info.storedCardIds ?? [String]() {
                                 addKnownCardId(eventHandler: eventHandler, cardId: card)
@@ -1299,6 +1376,12 @@ class PowerGameStateParser: LogEventParser {
                                 if actionStartingEntity.isControlled(by: eventHandler.player.id) {
                                     eventHandler.resetOpponentHandCostReduction()
                                 }
+                            }
+                        case CardIds.Collectible.Neutral.HemetJungleHunter:
+                            if correspondPlayer == eventHandler.player.id {
+                                eventHandler.player.removePredictedCardsInDeckCosting(3)
+                            } else if correspondPlayer == eventHandler.opponent.id {
+                                eventHandler.opponent.removePredictedCardsInDeckCosting(3)
                             }
                         case CardIds.NonCollectible.Warrior.EntertheLostCity_LatorviusGazeOfTheCityToken:
                             if actionStartingEntity?.isControlled(by: eventHandler.opponent.id) ?? false {
@@ -1425,8 +1508,10 @@ class PowerGameStateParser: LogEventParser {
                 // Handle hand related minions that trigger enchantments on opponent's board
                 let enchantmentMapping = [
                     CardIds.NonCollectible.Neutral.ChoralMrrrglr: CardIds.NonCollectible.Neutral.ChoralMrrrglr_ChorusEnchantment,
+                    CardIds.NonCollectible.Neutral.ChoralMrrrglr_ChoralMrrrglr: CardIds.NonCollectible.Neutral.ChoralMrrrglr_ChorusEnchantment,
                     CardIds.NonCollectible.Neutral.TimewarpedMrrrglr: CardIds.NonCollectible.Neutral.ChoralMrrrglr_ChorusEnchantment,
                     CardIds.NonCollectible.Neutral.CostumeEnthusiast: CardIds.NonCollectible.Neutral.CostumeEnthusiast_EnthusiasticEnchantment,
+                    CardIds.NonCollectible.Neutral.CostumeEnthusiast_CostumeEnthusiast: CardIds.NonCollectible.Neutral.CostumeEnthusiast_EnthusiasticEnchantment,
                     CardIds.NonCollectible.Neutral.Dramaloc: CardIds.NonCollectible.Neutral.Dramaloc_DramaticEnchantment,
                     CardIds.NonCollectible.Neutral.DramalocSticker: CardIds.NonCollectible.Neutral.DramalocSticker_DramaticEnchantment
                         ]
@@ -1438,16 +1523,25 @@ class PowerGameStateParser: LogEventParser {
                             e[GameTag.attached] == sourceEntity.id &&
                             e[GameTag.creator] == sourceEntity.id }) {
                             BobsBuddyInvoker.instance(gameId: eventHandler.gameId, turn: eventHandler.turnNumber())?.updateMinionEnchantment(enchantment, sourceEntity.id, false)
+                        } else {
+                            // A trinket source (Dramaloc Sticker) attaches one enchantment per friendly minion with CREATOR = the
+                            // trinket; the simulator reads the value from the trinket itself, so attach one to the captured trinket.
+                            if let trinketEnchantment = eventHandler.entities.values
+                            .first(where: { e in e.cardId == enchantmentCardId &&
+                                e[GameTag.creator] == sourceEntity.id }) {
+                                BobsBuddyInvoker.instance(gameId: eventHandler.gameId, turn: eventHandler.turnNumber())?.updateTrinketEnchantment(trinketEnchantment, sourceEntity.id, false)
+                            }
                         }
                     }
                 }
                 if (currentBlock.cardId == CardIds.NonCollectible.Neutral.TimewarpedMagnanimoose || currentBlock.cardId == CardIds.NonCollectible.Neutral.TimewarpedMagnanimoose_TimewarpedMagnanimoose) && currentBlock.triggerKeyword == "DEATHRATTLE" {
                     
                     if let magnanimooseEntity = eventHandler.entities[currentBlock.sourceEntityId] {
+                        // A summon that does not fit on the owner's board appears in SETASIDE
                         let summonedEntities = eventHandler.entities.values.filter({ e in
                             e[.cardtype] == CardType.minion.rawValue &&
                             e[.creator] == magnanimooseEntity.id &&
-                            e[.zone] == Zone.play.rawValue
+                            (e[.zone] == Zone.play.rawValue || e[.zone] == Zone.setaside.rawValue)
                         })
 
                         if !summonedEntities.isEmpty {
@@ -1458,7 +1552,8 @@ class PowerGameStateParser: LogEventParser {
                 }
                 if (currentBlock.cardId == CardIds.NonCollectible.Neutral.TimewarpedNelliesShipToken1 || currentBlock.cardId == CardIds.NonCollectible.Neutral.TimewarpedNelliesShipToken2) && currentBlock.triggerKeyword == "DEATHRATTLE" {
                     if let nelliesEntity = eventHandler.entities[currentBlock.sourceEntityId] {
-                        let summonedDbfIds = eventHandler.entities.values.filter { e in e[GameTag.cardtype] == CardType.minion.rawValue && e[.creator] == nelliesEntity.id && e[.zone] == Zone.play.rawValue }.compactMap { x in x.card.dbfId }
+                        // A summon that does not fit on the owner's board appears in SETASIDE
+                        let summonedDbfIds = eventHandler.entities.values.filter { e in e[GameTag.cardtype] == CardType.minion.rawValue && e[.creator] == nelliesEntity.id && (e[.zone] == Zone.play.rawValue || e[.zone] == Zone.setaside.rawValue) }.compactMap { x in x.card.dbfId }
                         if summonedDbfIds.count > 0 {
                             BobsBuddyInvoker.instance(gameId: eventHandler.gameId, turn: eventHandler.turnNumber())?.updateNelliesShipEnchantment(summonedDbfIds, nelliesEntity.id, nelliesEntity.isControlled(by: eventHandler.player.id))
                         }
@@ -1466,11 +1561,12 @@ class PowerGameStateParser: LogEventParser {
                 }
                 if (currentBlock.cardId == CardIds.NonCollectible.Neutral.Magnanimoose || currentBlock.cardId == CardIds.NonCollectible.Neutral.Magnanimoose_Magnanimoose) && currentBlock.triggerKeyword == "DEATHRATTLE" {
                     if let magnanimooseEntity = eventHandler.entities[currentBlock.sourceEntityId] {
+                        // A copy that does not fit on the owner's board appears in SETASIDE
                         let summonedEntities = eventHandler.entities.values
                             .filter { e in
                                 e[GameTag.cardtype] == CardType.minion.rawValue &&
                                 e[GameTag.creator] == magnanimooseEntity.id &&
-                                e[GameTag.zone] == Zone.play.rawValue
+                                (e[GameTag.zone] == Zone.play.rawValue || e[GameTag.zone] == Zone.setaside.rawValue)
                             }
 
                         if summonedEntities.count > 0 {
@@ -1485,6 +1581,41 @@ class PowerGameStateParser: LogEventParser {
                         }).min(by: { $0.id < $1.id }) {
                             BobsBuddyInvoker.instance(gameId: eventHandler.gameId, turn: eventHandler.turnNumber())?.updateLockAndLoadHeroPower(attachedEntity: summonedEntity, isOpponent: lockAndLoadEntity.isControlled(by: eventHandler.opponent.id))
                         }
+                    }
+                }
+                // Glorious Gloop's Start of Combat trigger block always runs, but it transforms nothing when the
+                // teammate has no minion to copy. A transform consumes the chosen minion's "In the Gloop"
+                // enchantment (it leaves PLAY inside this block), so an enchantment still in PLAY on a minion
+                // still in PLAY when the block ends means that minion was left unchanged.
+                if currentBlock.cardId == CardIds.NonCollectible.Neutral.FlobbidinousFloop_GloriousGloop, let floopEntity =  eventHandler.entities[currentBlock.sourceEntityId] {
+                    let noTransform = eventHandler.entities.values.any({ e in
+                        if e.cardId == CardIds.NonCollectible.Neutral.FlobbidinousFloop_InTheGloop
+                            && e.isInPlay
+                            && e.isControlled(by: floopEntity[GameTag.controller]) {
+                            if let chosen = eventHandler.entities[e[GameTag.attached]], chosen.isMinion && chosen.isInPlay {
+                                return true
+                            }
+                        }
+                        return false
+                    })
+                    
+                    if noTransform {
+                        BobsBuddyInvoker.instance(gameId: eventHandler.gameId, turn: eventHandler.turnNumber())?.updateFlobbidinousFloopConfirmedNoTransformDuos(currentBlock.sourceEntityId)
+                    }
+                }
+                
+                // Summoning Sphere's Start of Combat trigger block always runs, but it summons nothing when
+                // its owner's board is already full. The summon is the minion created with the Sphere as
+                // CREATOR; a summon does not outlive the combat, so no such minion in PLAY when the block
+                // ends means this trigger produced nothing.
+                if (currentBlock.cardId == CardIds.NonCollectible.Neutral.SummoningSphere || currentBlock.cardId == CardIds.NonCollectible.Neutral.LesserTrinket) && currentBlock.triggerKeyword ==  "TRIGGER_VISUAL", let sphereEntity = eventHandler.entities[currentBlock.sourceEntityId] {
+                    let noSummon = !eventHandler.entities.values.any({ e in
+                        e[GameTag.cardtype] == CardType.minion.rawValue
+                        && e[GameTag.creator] == sphereEntity.id
+                        && e[GameTag.zone] == Zone.play.rawValue })
+                        
+                    if noSummon {
+                        BobsBuddyInvoker.instance(gameId: eventHandler.gameId, turn: eventHandler.turnNumber())?.updateSummoningSphereConfirmedNoSummonDuos(sphereEntity.id)
                     }
                 }
             }

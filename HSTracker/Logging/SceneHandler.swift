@@ -60,12 +60,14 @@ class SceneHandler {
                 game.updateBattlegroundsSessionVisibility()
                 if #available(macOS 10.15, *) {
                     game.updateTier7PreLobbyVisibility()
+                    game.updateBattlegroundsGuidesPreLobbyVisibility()
                 }
             }
             Watchers.baconWatcher.stop()
         } else if from == .gameplay {
             game.updateBattlegroundsSessionVisibility()
             Watchers.battlegroundsTeammateBoardStateWatcher.stop()
+            Watchers.battlegroundsLobbyInfoWatcher.stop()
             Watchers.baconWatcher.stop()
             Watchers.bigCardWatcher.stop()
             Watchers.discoverStateWatcher.stop()
@@ -94,6 +96,7 @@ class SceneHandler {
                 game.updateBattlegroundsSessionVisibility()
                 if #available(macOS 10.15, *) {
                     game.updateTier7PreLobbyVisibility()
+                    game.updateBattlegroundsGuidesPreLobbyVisibility()
                 }
             }
             Watchers.baconWatcher.run()
@@ -104,6 +107,7 @@ class SceneHandler {
             Watchers.specialShopChoicesStateWatcher.run()
             Watchers.discoverStateWatcher.run()
             Watchers.baconWatcher.run()
+            Watchers.playZoneWatcher.run()
         }
         
         if from == .bacon {

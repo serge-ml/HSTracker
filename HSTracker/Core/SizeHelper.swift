@@ -240,9 +240,13 @@ struct SizeHelper {
     }
     
     static func overHearthstoneFrame() -> NSRect {
-        let frame = hearthstoneWindow.frame
-        
-        return hearthstoneWindow.relativeFrame(frame)
+        // hearthstoneWindow.frame is already the window's absolute screen rect -
+        // no relativeFrame() translation needed (that's for small widget rects
+        // authored in the Base-reference coordinate system, not the HS window's
+        // own frame; running it through relativeFrame() here double-applies the
+        // scale to the origin, drifting further off the further the window sits
+        // from (0,0) on screen).
+        return hearthstoneWindow.frame
     }
     
     static var trackerWidth: CGFloat {
@@ -369,13 +373,6 @@ struct SizeHelper {
         return hearthstoneWindow.relativeFrame(frame)
     }
     
-    static func turnCounterFrame() -> NSRect {
-        let frame = battlegroundsTierOverlayFrame()
-        let left = frame.minX - 100
-        let top = frame.minY
-        return NSRect(x: left, y: top, width: 100, height: frame.height)
-    }
-    
     static func battlegroundsSessionFrame() -> NSRect {
         let bottom = hearthstoneWindow.frame.minY + 0.05 * hearthstoneWindow.height
         let top = hearthstoneWindow.frame.maxY - 0.15 * hearthstoneWindow.height
@@ -397,17 +394,6 @@ struct SizeHelper {
         
         let frame = NSRect(x: left, y: bottom, width: right - left, height: top - bottom)
         return (frame)
-    }
-    
-    static func battlegroundsTierOverlayFrame() -> NSRect {
-        let trackerFrame = playerTrackerFrame()
-        let tierOverlay = AppDelegate.instance().coreManager?.game.windowManager.battlegroundsTierOverlay.tierOverlay
-        let tiers = (tierOverlay?.showTavernTier7 ?? false) ? 7 : 6
-        let height = CGFloat(56)
-        let width = CGFloat(tiers * 48 + 8)
-        let x = hearthstoneWindow.frame.minX + hearthstoneWindow.frame.width - width
-        
-        return NSRect(x: x, y: trackerFrame.minY + trackerFrame.height - height, width: width, height: height)
     }
     
     static func bobsPanelOverlayFrame() -> NSRect {
@@ -574,9 +560,41 @@ struct SizeHelper {
         let w = 238.0*3.0
         let h = 224.0*3.0
         let scale = hs.height / 1080
-        return NSRect(x: hs.minX + SizeHelper.getScaledXPos(0.087, width: SizeHelper.hearthstoneWindow.width, ratio: SizeHelper.screenRatio), y: hs.minY + (hs.height * (1.0 - 0.217)) - h - 16.0 * scale, width: w*2.0, height: h*2.0)
+        let sw = w * scale
+        let sh = h * scale
+        // Matches HDT's OverlayElementBehavior exactly (see
+        // OverlayElementBehavior.cs: UpdatePosition() does a plain
+        // Canvas.SetTop(Element, GetTop()) - WPF's Canvas.Top is the
+        // distance from the *top* of the canvas down to the element's own
+        // top edge - and UpdateScaling() builds its ScaleTransform with
+        // centerX/centerY = 0 whenever GetLeft/GetTop are both set, i.e. the
+        // element scales anchored at its own top-left corner, not its
+        // center). HDT's GetTop = () => Height * 0.217, so the element's top
+        // edge sits 21.7% of the window height down from the window's top -
+        // hs.height * (1.0 - 0.217) is that same point expressed in AppKit's
+        // bottom-up screen-Y convention.
+        //
+        // This used to return an artificially 2x-oversized frame (w*2, h*2)
+        // with updateScaling() repositioning a smaller "scaleView" inside it
+        // to get the actual visible placement. On any screen without ~260pt
+        // of extra vertical room above the game window, that oversized frame
+        // (up to 1344pt tall) doesn't fit on screen at all, and AppKit
+        // silently clamps window.setFrame()'s origin.y back near 0 - so no
+        // Y value computed here ever actually took effect (confirmed via
+        // logging: this returned y=151.7 while the window's real frame.origin.y
+        // was 0). Returning the frame already sized to the visible content
+        // (sw x sh, no 2x/halving dance) means there's nothing left for
+        // AppKit to clamp.
+        // Small visual nudge on top of HDT's 0.217 - confirmed close but
+        // slightly high once the clamping bug above was fixed and the badge
+        // was actually visible relative to its deck box for the first time.
+        // (0.235 overshot slightly the other way, landing ~30% down into
+        // the box instead of at its top edge; 0.223 was very close but
+        // still a touch high.)
+        let topEdge = hs.minY + hs.height * (1.0 - 0.226)
+        return NSRect(x: hs.minX + SizeHelper.getScaledXPos(0.087, width: SizeHelper.hearthstoneWindow.width, ratio: SizeHelper.screenRatio), y: topEdge - sh, width: sw, height: sh)
     }
-    
+
     static func opponentMaxResourcesFrame() -> NSRect {
         let hs = hearthstoneWindow.frame
         let w = 222.0

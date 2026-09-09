@@ -495,32 +495,48 @@ class Tracker: OverWindowController, CardCellHover {
     }
     
     func setRelatedCardsTooltip(_ player: Player, _ cardId: String, _ rect: NSRect) {
+        guard #available(macOS 10.15, *) else { return }
         let game = AppDelegate.instance().coreManager.game
         let relatedCards = game.getRelatedCards(player: player, cardId: cardId)
-        
+
         let hearthstoneRect = SizeHelper.hearthstoneWindow.frame
         let tooltipGridCards = game.windowManager.tooltipGridCards
-        if relatedCards.count > 0 {
+        // The deck-list hover is HDT's Card.UpdateTooltip path, gated on OutfinderInDeck: an
+        // Outfinder pool card shows nothing at all when the Outfinder is off for the deck, while a
+        // card carrying only a plain related-cards list still shows its grid.
+        if relatedCards.count > 0 &&
+            !game.relatedCardsManager.isOutfinderSuppressed(cardId: cardId, surfaceEnabled: Settings.outfinderInDeck) {
             let nonNullableRelatedCards = relatedCards.compactMap { $0 }
-            
+
             tooltipGridCards.setCardIdsFromCards(nonNullableRelatedCards)
-            tooltipGridCards.title = String.localizedString("Related_Cards", comment: "")
+            tooltipGridCards.setTitle(String.localizedString("Related_Cards", comment: ""))
+            // Passing player (like Game.swift's hover paths already do) so dynamic
+            // evolve/devolve pools resolve their live-state summary here too, instead of
+            // silently falling through to no summary on a deck-list hover.
+            let (statistics, summary, hasLargePool) = game.relatedCardsManager.getPoolStatistics(cardId: cardId, relatedCards: relatedCards, player: player)
+            tooltipGridCards.setPoolStatistics(statistics, relatedCardsSummary: summary, hasLargePool: hasLargePool)
             let screen = NSScreen.screens.first { s in s.frame.contains(rect) } ?? NSScreen.main
             var y = rect.minY
             if rect.minY + CGFloat(tooltipGridCards.gridHeight) > screen?.frame.height ?? hearthstoneRect.height {
                 y = hearthstoneRect.maxY - CGFloat(tooltipGridCards.gridHeight)
             }
-            
+
             var x: CGFloat = 0.0
             if rect.minX < hearthstoneRect.width / 2 {
                 x = rect.maxX
             } else {
                 x = rect.minX - CGFloat(tooltipGridCards.gridWidth)
             }
-            
-            game.windowManager.show(controller: tooltipGridCards, show: true, frame: NSRect(x: x, y: y, width: CGFloat(tooltipGridCards.gridWidth), height: CGFloat(tooltipGridCards.gridHeight)))
+
+            let tooltipFrame = NSRect(x: x, y: y, width: CGFloat(tooltipGridCards.gridWidth), height: CGFloat(tooltipGridCards.gridHeight))
+            tooltipGridCards.show(frame: tooltipFrame)
+            RelatedCardsRightClickMonitor.shared.setHoveredLargePool(
+                card: hasLargePool ? Cards.by(cardId: cardId) : nil,
+                pool: hasLargePool ? nonNullableRelatedCards : [],
+                anchorFrame: tooltipFrame)
         } else {
-            game.windowManager.show(controller: tooltipGridCards, show: false)
+            tooltipGridCards.hide()
+            RelatedCardsRightClickMonitor.shared.clearHoveredLargePool()
         }
     }
     
@@ -608,6 +624,8 @@ class Tracker: OverWindowController, CardCellHover {
                                         object: nil,
                                         userInfo: userinfo)
         
-        AppDelegate.instance().coreManager.game.windowManager.show(controller: AppDelegate.instance().coreManager.game.windowManager.tooltipGridCards, show: false)
+        if #available(macOS 10.15, *) {
+            AppDelegate.instance().coreManager.game.windowManager.tooltipGridCards.hide()
+        }
     }
 }

@@ -7,7 +7,6 @@
 //
 
 import Foundation
-import Atomics
 
 enum ArenaSessionState: Int {
     case invalid = -1,
@@ -83,13 +82,7 @@ struct DeckEditChangedEventArgs {
     let isUnderground: Bool
 }
 
-final class ArenaWatcher {
-    private let delay: TimeInterval
-
-    private var _running = ManagedAtomic<Bool>(false)
-    private var _watch = ManagedAtomic<Bool>(false)
-    internal var queue: DispatchQueue?
-    
+final class ArenaWatcher: Watcher {
     private var _prevSlot = -1
     private var _prevRedraftSlot = -1
     private var _prevChoices: [MirrorCard]?
@@ -121,38 +114,21 @@ final class ArenaWatcher {
     public var onHeroChoicePicked: ((ArenaWatcher) -> Void)?
     public var onHeroSelectionClosed: ((ArenaWatcher) -> Void)?
 
-    init(delay: TimeInterval = 0.500) {
-        self.delay = delay
+    override init(delay: TimeInterval = 0.500) {
+        super.init(delay: delay)
     }
-    
-    func run() {
-        _watch.store(true, ordering: .sequentiallyConsistent)
-        if _running.load(ordering: .sequentiallyConsistent) {
-            return
-        }
-        if queue == nil {
-            queue = DispatchQueue(label: "\(type(of: self))",
-                                  attributes: [])
-        }
-        if let queue = queue {
-            queue.async { [weak self] in
-                guard let self else { return }
-                Thread.current.name = queue.label
-                self.watch()
-            }
-        }
-    }
-    
-    func stop() {
-        let wasWatching = _watch.exchange(false, ordering: .sequentiallyConsistent)
+
+    @discardableResult
+    override func stop() -> Bool {
+        let wasWatching = super.stop()
         if wasWatching {
             onDraftClosed?(self)
             onHeroSelectionClosed?(self)
         }
+        return wasWatching
     }
 
-    func watch() {
-        _running.store(true, ordering: .sequentiallyConsistent)
+    override func setup() {
         _prevSlot = -1
         _prevRedraftSlot = -1
         _prevInfo = nil
@@ -166,20 +142,9 @@ final class ArenaWatcher {
         _discardTrackerPoolSignature = nil
         _redraftOriginalDeckCardIds = nil
         _lastArenaProbeSignature = nil
-        while _watch.load(ordering: .sequentiallyConsistent) {
-            Thread.sleep(forTimeInterval: delay)
-
-            if !_watch.load(ordering: .sequentiallyConsistent) {
-                break
-            }
-            if update() {
-                break
-            }
-        }
-        _running .store(false, ordering: .sequentiallyConsistent)
     }
-    
-    func update() -> Bool {
+
+    override func update() -> Bool {
         let arenaInfo = DeckImporter.fromArena(false)
         let draftChoices = MirrorHelper.getArenaDraftChoices()
 
@@ -249,9 +214,7 @@ final class ArenaWatcher {
             if arenaInfo.rewards.count > 0 {
                 onRewards?(RewardsEventArgs(info: arenaInfo))
             }
-            _watch.store(false, ordering: .sequentiallyConsistent)
-            onDraftClosed?(self)
-            onHeroSelectionClosed?(self)
+            stop()
             return true
         }
         

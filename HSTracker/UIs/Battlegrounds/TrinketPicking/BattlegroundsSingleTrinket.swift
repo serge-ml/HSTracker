@@ -7,6 +7,7 @@
 //
 
 import Foundation
+import SwiftUI
 
 class BattlegroundsSingleTrinket: NSView {
     @IBOutlet var contentView: NSView!
@@ -251,5 +252,125 @@ class BattlegroundsSingleTrinket: NSView {
         } else {
             pickRateLabel.stringValue = "—" // em dash
         }
+    }
+
+    // MARK: - Trinket guide hover tooltip
+
+    private var trinketTrackingArea: NSTrackingArea?
+    private var trinketTooltipHostingView: NSView?
+
+    // The tooltip is parented to the window's content view, not to the card
+    // that raised it, so nothing else in the panel will ever take it down -
+    // whichever card put it there has to. Knowing which card that is means one
+    // that misses its own mouseExited (the mouse crossing straight from one
+    // card to the next, say) can't leave its tooltip on the board for the rest
+    // of the pick.
+    private static weak var tooltipOwner: BattlegroundsSingleTrinket?
+
+    override func updateTrackingAreas() {
+        super.updateTrackingAreas()
+        if let trinketTrackingArea {
+            removeTrackingArea(trinketTrackingArea)
+        }
+        // .activeAlways, not .activeInKeyWindow: this sits in a non-
+        // activating overlay panel (OverWindowController) that never
+        // becomes key, so key-window-scoped tracking would never fire -
+        // same reasoning as GuideTooltip.swift's .onHover-based tooltips.
+        let area = NSTrackingArea(rect: bounds, options: [.mouseEnteredAndExited, .activeAlways], owner: self, userInfo: nil)
+        addTrackingArea(area)
+        trinketTrackingArea = area
+    }
+
+    override func mouseEntered(with event: NSEvent) {
+        super.mouseEntered(with: event)
+        if #available(macOS 10.15, *) {
+            showTrinketGuideTooltip()
+        }
+    }
+
+    override func mouseExited(with event: NSEvent) {
+        super.mouseExited(with: event)
+        hideTrinketGuideTooltip()
+    }
+
+    // A card is dropped from the stack whenever the pick stats are refreshed.
+    // Its tooltip lives in the window instead of inside the card, so it would
+    // otherwise outlive it.
+    override func viewDidMoveToWindow() {
+        super.viewDidMoveToWindow()
+        if window == nil {
+            hideTrinketGuideTooltip()
+        }
+    }
+
+    @available(macOS 10.15, *)
+    private func showTrinketGuideTooltip() {
+        guard let dbfId = viewModel.dbfId, let window = self.window else { return }
+
+        // Another card still has its tooltip up.
+        if let owner = BattlegroundsSingleTrinket.tooltipOwner, owner !== self {
+            owner.hideTrinketGuideTooltip()
+        }
+
+        // Already showing for this card, so there is nothing to do. AppKit
+        // re-creates the tracking areas in a window whenever its view
+        // hierarchy changes - which adding the tooltip itself does - so
+        // mouseEntered arrives again on the next mouse move, and again on the
+        // one after that. Building a fresh hosting view each time overwrote
+        // the property holding the previous one, which left it in the content
+        // view with nothing to take it down: one stuck tooltip per mouse move,
+        // all of them staying until the panel was torn down by a pick.
+        if trinketTooltipHostingView != nil {
+            return
+        }
+
+        let guide = AppDelegate.instance().coreManager.game.windowManager.rootOverlay?.viewModel.battlegroundsTrinketGuides.guide(dbfId: dbfId)
+        let howToPlay = guide?.published_guide ?? ""
+
+        let availableRaces = Set(AppDelegate.instance().coreManager.game.availableRaces ?? [])
+        let favorableTribes = (guide?.favorable_tribes ?? []).compactMap { raceNumber -> Race? in
+            guard raceNumber >= 0, raceNumber < Race.allCases.count else { return nil }
+            let race = Race.allCases[raceNumber]
+            return availableRaces.contains(race) ? race : nil
+        }
+
+        let hostingView = NSHostingView(rootView: GuideTooltipCardView(howToPlay: howToPlay, favorableTribes: favorableTribes))
+        let fitting = hostingView.fittingSize
+        let selfFrameInWindow = convert(bounds, to: nil)
+        let container = PassthroughTooltipView(frame: NSRect(
+            x: selfFrameInWindow.midX - fitting.width / 2,
+            y: selfFrameInWindow.maxY + 8,
+            width: fitting.width,
+            height: fitting.height
+        ))
+        hostingView.frame = container.bounds
+        hostingView.autoresizingMask = [.width, .height]
+        container.addSubview(hostingView)
+        // Added to the window's content view (not a sibling inside
+        // itemsStack) so it draws above every trinket card regardless of
+        // stack order, and isn't affected by NSStackView's own layout pass.
+        window.contentView?.addSubview(container)
+        trinketTooltipHostingView = container
+        BattlegroundsSingleTrinket.tooltipOwner = self
+    }
+
+    private func hideTrinketGuideTooltip() {
+        trinketTooltipHostingView?.removeFromSuperview()
+        trinketTooltipHostingView = nil
+        if BattlegroundsSingleTrinket.tooltipOwner === self {
+            BattlegroundsSingleTrinket.tooltipOwner = nil
+        }
+    }
+}
+
+// The tooltip is decorative and must stay out of hit testing entirely. It is
+// added on top of everything else in the window and sits 8pt above the hovered
+// card - close enough that the cursor lands inside it - and a hit-testable
+// view appearing under the cursor changes which view AppKit considers the
+// mouse to be over, which is how the card's own mouseExited went missing.
+// HDT's guide tooltips are likewise not hit-test visible.
+private final class PassthroughTooltipView: NSView {
+    override func hitTest(_ point: NSPoint) -> NSView? {
+        return nil
     }
 }
