@@ -20,7 +20,7 @@ jobs:
   core:
     runs-on: macos-15
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
       - name: Verify fork identity and updater isolation
         run: |
@@ -81,7 +81,7 @@ jobs:
   app:
     runs-on: macos-15
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
       - name: Resolve Swift packages
         run: |

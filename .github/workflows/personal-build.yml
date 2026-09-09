@@ -10,7 +10,7 @@ jobs:
   unsigned-build:
     runs-on: macos-15
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
       - name: Resolve Swift packages
         run: xcodebuild -resolvePackageDependencies -project HSTracker.xcodeproj

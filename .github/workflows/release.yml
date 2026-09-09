@@ -92,7 +92,7 @@ jobs:
           echo "sha=$sha" >> "$GITHUB_OUTPUT"
           echo "run_number=$run_number" >> "$GITHUB_OUTPUT"
 
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
         with:
           ref: ${{ steps.ci.outputs.sha }}
           fetch-depth: 0
@@ -499,7 +499,7 @@ jobs:
     env:
       GH_TOKEN: ${{ github.token }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
         with:
           ref: ${{ needs.sign.outputs.sha }}
           fetch-depth: 0

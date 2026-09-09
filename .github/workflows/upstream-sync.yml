@@ -27,7 +27,7 @@ jobs:
             exit 1
           fi
 
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
         with:
           fetch-depth: 0
           ref: ${{ github.event.repository.default_branch }}
@@ -210,15 +210,21 @@ jobs:
           BASE_SHA: ${{ steps.status.outputs.base_sha }}
           CONFLICT_FILES: ${{ steps.merge.outputs.conflict_files }}
         run: |
-          short_sha="${UPSTREAM_SHA:0:10}"
-          title="[automation] Upstream sync conflict: $short_sha"
+          title="[automation] Upstream sync requires attention"
           run_url="${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
           issue_number="$(
             gh issue list \
               --state open \
-              --search "$title in:title" \
-              --json number \
-              --jq '.[0].number // empty'
+              --limit 100 \
+              --json number,title \
+              --jq '
+                map(select(
+                  .title == "[automation] Upstream sync requires attention" or
+                  (.title | startswith("[automation] Upstream sync conflict:"))
+                )) |
+                sort_by(.number) |
+                .[0].number // empty
+              '
           )"
           body="$(
             printf '%s\n\n%s\n%s\n%s\n%s\n\n%s\n%s\n' \
@@ -231,14 +237,72 @@ jobs:
               "\`\`\`"$'\n'"$CONFLICT_FILES"$'\n'"\`\`\`"
           )"
           if [ -n "$issue_number" ]; then
-            gh issue edit "$issue_number" --body "$body"
+            gh issue edit "$issue_number" --title "$title" --body "$body"
           else
             gh issue create --title "$title" --body "$body"
+            issue_number="$(
+              gh issue list \
+                --state open \
+                --limit 100 \
+                --json number,title \
+                --jq \
+                  'map(select(.title == "[automation] Upstream sync requires attention")) | .[0].number'
+            )"
           fi
 
-      - name: Stop after a merge conflict
+          gh issue list \
+            --state open \
+            --limit 100 \
+            --json number,title \
+            --jq '
+              .[] |
+              select(
+                .number != '"$issue_number"' and
+                (.title | startswith("[automation] Upstream sync conflict:"))
+              ) |
+              .number
+            ' |
+          while read -r duplicate_number; do
+            gh issue close "$duplicate_number" \
+              --comment "Superseded by #$issue_number, which tracks the current upstream conflict."
+          done
+
+      - name: Report the merge conflict without failing the scheduler
         if: steps.status.outputs.changed == 'true' && steps.merge.outputs.conflict == 'true'
-        run: exit 1
+        env:
+          UPSTREAM_SHA: ${{ steps.status.outputs.upstream_sha }}
+          CONFLICT_FILES: ${{ steps.merge.outputs.conflict_files }}
+        run: |
+          echo "::warning::Upstream sync needs manual conflict resolution for $UPSTREAM_SHA."
+          {
+            echo "## Upstream sync needs attention"
+            echo
+            echo "The scheduler completed normally, but the upstream patch could not be applied safely."
+            echo
+            echo '```'
+            echo "$CONFLICT_FILES"
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Close resolved upstream conflict signals
+        if: steps.status.outputs.changed == 'false' || steps.merge.outputs.conflict == 'false'
+        run: |
+          gh issue list \
+            --state open \
+            --limit 100 \
+            --json number,title \
+            --jq '
+              .[] |
+              select(
+                .title == "[automation] Upstream sync requires attention" or
+                (.title | startswith("[automation] Upstream sync conflict:"))
+              ) |
+              .number
+            ' |
+          while read -r issue_number; do
+            gh issue close "$issue_number" \
+              --comment "The latest upstream state was prepared successfully; closing the conflict signal."
+          done
 
       - name: Push the review branch
         if: steps.status.outputs.changed == 'true' && steps.merge.outputs.needs_push == 'true'
