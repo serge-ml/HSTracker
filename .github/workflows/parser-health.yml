@@ -82,3 +82,19 @@ jobs:
           else
             gh issue create --title "$title" --body "$body"
           fi
+
+      - name: Close resolved parser health issue
+        if: success()
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh issue list \
+            --state open \
+            --limit 100 \
+            --json number,title \
+            --jq \
+              '.[] | select(.title == "[automation] HearthArena parser health check failed") | .number' |
+          while read -r issue_number; do
+            gh issue close "$issue_number" \
+              --comment "The scheduled parser health check is passing again."
+          done
