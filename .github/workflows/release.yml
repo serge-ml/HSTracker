@@ -99,7 +99,7 @@ jobs:
           persist-credentials: false
 
       - name: Download the exact CI artifact
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v8
         with:
           name: HSTracker-Arena-unsigned-${{ steps.ci.outputs.sha }}
           path: ${{ runner.temp }}/ci-artifact
@@ -483,7 +483,7 @@ jobs:
           cp "$metadata" "$stage/release-metadata.json"
 
       - name: Upload verified release staging artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: HSTracker-Arena-release-${{ steps.ci.outputs.sha }}
           path: ${{ runner.temp }}/release-stage/
@@ -505,7 +505,7 @@ jobs:
           fetch-depth: 0
 
       - name: Download verified release staging artifact
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v8
         with:
           name: HSTracker-Arena-release-${{ needs.sign.outputs.sha }}
           path: ${{ runner.temp }}/release-stage
